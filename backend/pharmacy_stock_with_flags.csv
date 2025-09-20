@@ -1,0 +1,500 @@
+Name,Quantity,avg_daily_dispensed,Flag
+Acyclovir 400mg Tablet,680,34,Green
+Rocuronium Bromide Injection,150,10,Green
+Cefotaxime Sodium Powder, for Solution,90,6,Orange
+Ondansetron 4mg Tablet,975,39,Green
+Duloxetine DR 60mg Capsule,1560,52,Green
+Glipizide XL 5mg Tablet,990,33,Green
+Clonazepam Tablet,1000,10,Yellow
+Sildenafil 100mg Tablet,700,28,Green
+Paroxetine 20mg Tablet,1260,42,Green
+Quetiapine 100mg Tablet,1290,43,Green
+Bumetanide Injection,126,9,Green
+Meloxicam 15mg Tablet,2010,67,Green
+Promethazine Hydrochloride Injection,60,12,Red
+Fluconazole 150mg Tablet,420,21,Green
+Methylphenidate Film, Extended Release,25,5,Red
+Clopidogrel 75mg Tablet,2490,83,Green
+Azithromycin 250mg Tablet,66,11,Green
+Epinephrine Bitrate, Lidocaine Hydrochloride Injection,72,8,Red
+Trazodone 100mg Tablet,1950,65,Green
+Alprazolam 0.5mg Tablet,1050,35,Green
+Warfarin 5mg Tablet,1350,45,Green
+Metronidazole Injection,210,15,Green
+Desmopressin Acetate Spray,108,12,Red
+Prednisone 10mg Tablet,840,42,Green
+Doxycycline Hyclate 100mg Capsule,720,36,Green
+Amoxicillin Powder, For Suspension,60,20,Red
+Atenolol 25mg Tablet,1650,55,Green
+Cyclobenzaprine 10mg Tablet,1440,48,Green
+Citalopram 20mg Tablet,2070,69,Green
+Gabapentin 300mg Capsule,3650,121,Green
+Tramadol 50mg Tablet,2400,80,Green
+Lidocaine Hydrochloride Injection,48,12,Red
+Clindamycin Phosphate Injection,120,6,Orange
+Potassium Chloride ER 10mEq Tablet,1110,37,Green
+Ropivacaine Hydrochloride Injection,133,7,Green
+Omeprazole DR 20mg Capsule,2910,97,Green
+Ciprofloxacin 500mg Tablet,495,31,Green
+Metoprolol Succinate XL 50mg Tablet,2610,87,Green
+Carboplatin Injection,20,5,Red
+Methylprednisolone Acetate Injection,240,12,Green
+Furosemide Injection,120,8,Green
+Dextrose Monohydrate 50% Injection,70,10,Red
+Acetaminophen-Codeine 300-30mg Tablet,600,30,Green
+Liraglutide Injection,120,4,Orange
+Allopurinol 100mg Tablet,900,30,Green
+Finasteride 5mg Tablet,570,19,Green
+Atropine Sulfate Injection,16,4,Red
+Ranitidine 150mg Tablet,1020,34,Green
+Insulin Glargine 100 unit/mL Pen,210,7,Green
+Bupropion XL 300mg Tablet,1855,51,Green
+Hydrochlorothiazide 25mg Tablet,2460,82,Green
+Loratadine 10mg Tablet,810,27,Green
+Dextrose Monohydrate 70% Injection,180,6,Green
+Rifampin Injection,420,14,Green
+Ceftriaxone Injection,128,12,Green
+Fentanyl Citrate Injection,300,15,Green
+Sertraline 100mg Tablet,2485,73,Green
+Simvastatin 20mg Tablet,2850,95,Green
+Montelukast 10mg Tablet,1620,54,Green
+Bacitracin Ophthalmic Ointment,39,3,Red
+Metformin 500mg Tablet,90,15,Blue
+Escitalopram 10mg Tablet,2430,81,Green
+Tamsulosin HCl 0.4mg Capsule,1248,32,Green
+Hydrocodone-Acetaminophen 5-325mg Tablet,2500,125,Green
+Zolpidem Tartrate 10mg Tablet,470,24,Green
+Oxycodone 5mg Tablet,800,40,Green
+Propranolol Hydrochloride Injection,140,10,Green
+Lisinopril 20mg Tablet,432,18,Green
+Sodium Chloride 23.4% Injection,250,5,Green
+Venlafaxine XR 75mg Capsule,1470,49,Green
+Sterile Water Irrigant,165,11,Green
+Carvedilol 12.5mg Tablet,1750,50,Green
+Dextrose Monohydrate 10% Injection,140,14,Green
+Cephalexin 500mg Capsule,87,15,Blue
+Amlodipine Besylate 10mg Tablet,2786,95,Green
+Amoxicillin-Clavulanate 875-125mg Tablet,540,27,Green
+Lorazepam Injection,270,9,Orange
+Valproate Sodium Injection,80,4,Green
+Dopamine Hydrochloride Injection,240,8,Green
+Bupivacaine Hydrochloride Injection,150,10,Green
+Furosemide 20mg Tablet,222,15,Green
+Ibuprofen 600mg Tablet,1380,46,Green
+Atorvastatin 20mg Tablet,2500,150,Green
+Losartan 50mg Tablet,2250,75,Green
+Triamcinolone Acetonide Injection,42,3,Green
+Fluticasone Propionate 50mcg Nasal Spray,390,13,Green
+Levothyroxine 50mcg Tablet,3000,100,Green
+Amitriptyline 25mg Tablet,930,31,Green
+Amphetamine Aspartate Monohydrate, Amphetamine Sulfate, Dextroamphetamine Saccharate, Dextroamphetamine Sulfate Tablet,120,4,Orange
+Albuterol Sulfate Solution,120,15,Red
+Sulfamethoxazole-Trimethoprim 800-160mg Tablet,630,32,Green
+Lisdexamfetamine Dimesylate Capsule,300,10,Green
+Naproxen 500mg Tablet,1140,38,Green
+Metoprolol Tartrate 25mg Tablet,2160,72,Green
+Insulin Lispro 100 unit/mL Vial,180,6,Green
+Cefdinir 300mg Capsule,450,23,Green
+Diltiazem CD 120mg Capsule,1080,36,Green
+Eszopiclone 3mg Tablet,440,22,Green
+Cetirizine 10mg Tablet,690,23,Green
+Diazepam 5mg Tablet,660,22,Green
+Spironolactone 25mg Tablet,1050,35,Green
+Clonidine 0.1mg Tablet,1230,41,Green
+Topiramate 100mg Tablet,960,32,Green
+Amoxicillin 500mg Capsule,105,21,Blue
+Risperidone 2mg Tablet,630,21,Green
+Lamotrigine 100mg Tablet,1170,39,Green
+Mirtazapine 15mg Tablet,870,29,Green
+Hydroxychloroquine 200mg Tablet,510,17,Green
+Celecoxib 200mg Capsule,750,25,Green
+Diclofenac Sodium 75mg Tablet,840,28,Green
+Buspirone 10mg Tablet,930,31,Green
+Aripiprazole 10mg Tablet,480,16,Green
+Olanzapine 10mg Tablet,540,18,Green
+Valacyclovir 500mg Tablet,570,29,Green
+Propranolol 40mg Tablet,1320,44,Green
+Famotidine 20mg Tablet,1140,38,Green
+Triamcinolone 0.1% Cream,270,9,Green
+Nortriptyline 25mg Capsule,720,24,Green
+Benazepril 10mg Tablet,1050,35,Green
+Hydralazine 25mg Tablet,990,33,Green
+Latanoprost 0.005% Eye Drops,150,5,Green
+Oxybutynin 5mg Tablet,690,23,Green
+Fenofibrate 145mg Tablet,960,32,Green
+Lovastatin 20mg Tablet,1410,47,Green
+Rosuvastatin 10mg Tablet,2190,73,Green
+Pravastatin 40mg Tablet,2280,76,Green
+Gemfibrozil 600mg Tablet,900,30,Green
+Ezetimibe 10mg Tablet,1290,43,Green
+Terazosin 2mg Capsule,810,27,Green
+Doxazosin 4mg Tablet,870,29,Green
+Glyburide 5mg Tablet,960,32,Green
+Glimepiride 2mg Tablet,1200,40,Green
+Pioglitazone 30mg Tablet,840,28,Green
+Sitagliptin 100mg Tablet,600,20,Green
+Insulin Aspart 100 unit/mL FlexPen,240,8,Green
+Lantus Solostar 100 unit/mL Pen,270,9,Green
+Levemir FlexTouch 100 unit/mL Pen,300,10,Green
+Humalog KwikPen 100 unit/mL,330,11,Green
+Novolog FlexPen 100 unit/mL,360,12,Green
+Victoza 3-Pak Pen,180,6,Green
+Trulicity 0.75mg Pen,120,4,Green
+Ozempic 1mg Pen,90,3,Green
+Januvia 100mg Tablet,630,21,Green
+Metformin XR 500mg Tablet,2700,90,Green
+Lisinopril-HCTZ 20-12.5mg Tablet,1980,66,Green
+Losartan-HCTZ 100-25mg Tablet,2100,70,Green
+Valsartan 160mg Tablet,1590,53,Green
+Irbesartan 300mg Tablet,1110,37,Green
+Candesartan 16mg Tablet,810,27,Green
+Olmesartan 40mg Tablet,930,31,Green
+Telmisartan 80mg Tablet,720,24,Green
+Enalapril 10mg Tablet,1560,52,Green
+Ramipril 5mg Capsule,1440,48,Green
+Quinapril Hydrochloride Tablet,100,10,Blue
+Labetalol 100mg Tablet,1260,42,Green
+Atenolol-Chlorthalidone 100-25mg Tablet,990,33,Green
+Bisoprolol 5mg Tablet,900,30,Green
+Nebivolol 5mg Tablet,660,22,Green
+Clonidine Patch 0.1mg/24hr,300,10,Green
+Nitroglycerin SL 0.4mg Tablet,450,15,Green
+Isosorbide Mononitrate ER 60mg Tablet,1170,39,Green
+Diltiazem ER 240mg Capsule,1350,45,Green
+Verapamil ER 180mg Tablet,1230,41,Green
+Nifedipine ER 30mg Tablet,1080,36,Green
+Amiodarone 200mg Tablet,750,25,Green
+Digoxin 0.125mg Tablet,810,27,Green
+Flecainide 100mg Tablet,510,17,Green
+Sotalol 80mg Tablet,720,24,Green
+Dofetilide 500mcg Capsule,210,7,Green
+Apixaban 5mg Tablet,900,30,Green
+Rivaroxaban 20mg Tablet,930,31,Green
+Edoxaban 60mg Tablet,360,12,Green
+Dabigatran 150mg Capsule,540,18,Green
+Warfarin 2.5mg Tablet,1410,47,Green
+Enoxaparin 40mg/0.4mL Syringe,390,13,Green
+Fondaparinux 2.5mg/0.5mL Syringe,240,8,Green
+Heparin Sodium Injection,120,4,Orange
+Prasugrel 10mg Tablet,420,14,Green
+Ticagrelor 90mg Tablet,600,20,Green
+Cilostazol 100mg Tablet,570,19,Green
+Pentoxifylline ER 400mg Tablet,780,26,Green
+Dipyridamole 75mg Tablet,690,23,Green
+Methotrexate 2.5mg Tablet,1020,34,Green
+Leflunomide 20mg Tablet,450,15,Green
+Sulfasalazine 500mg Tablet,810,27,Green
+Adalimumab 40mg/0.8mL Pen,60,2,Green
+Etanercept 50mg/mL Syringe,75,3,Green
+Infliximab 100mg Vial,30,1,Green
+Rituximab 100mg/10mL Vial,20,1,Green
+Abatacept 125mg/mL Syringe,45,2,Green
+Tocilizumab 162mg/0.9mL Syringe,50,2,Green
+Ustekinumab 45mg/0.5mL Syringe,40,1,Green
+Secukinumab 150mg/mL Pen,60,2,Green
+Ixekizumab 80mg/mL Pen,40,1,Green
+Golimumab 50mg/0.5mL Pen,30,1,Green
+Certolizumab Pegol 200mg/mL Syringe,40,1,Green
+Anakinra 100mg/0.67mL Syringe,35,1,Green
+Canakinumab 150mg/mL Vial,15,1,Green
+Tofacitinib 5mg Tablet,300,10,Green
+Baricitinib 2mg Tablet,150,5,Green
+Upadacitinib 15mg Tablet,120,4,Green
+Filgotinib 200mg Tablet,90,3,Green
+Azathioprine 50mg Tablet,750,25,Green
+Mycophenolate Mofetil 500mg Tablet,600,20,Green
+Tacrolimus 1mg Capsule,450,15,Green
+Cyclosporine 100mg Capsule,300,10,Green
+Sirolimus 1mg Tablet,150,5,Green
+Everolimus 0.5mg Tablet,90,3,Green
+Temazepam 15mg Capsule,630,21,Green
+Triazolam 0.125mg Tablet,360,12,Green
+Estazolam 1mg Tablet,300,10,Green
+Flurazepam Hydrochloride Capsule,100,5,Blue
+Quazepam 15mg Tablet,120,4,Green
+Lorazepam 1mg Tablet,1380,46,Green
+Oxazepam Capsule,150,10,Blue
+Chlordiazepoxide 10mg Capsule,600,20,Green
+Clorazepate 7.5mg Tablet,450,15,Green
+Prazepam 10mg Tablet,210,7,Green
+Halazepam 40mg Tablet,120,4,Green
+Midazolam 2mg/mL Syrup,90,3,Green
+Zaleplon 10mg Capsule,390,13,Green
+Ramelteon 8mg Tablet,240,8,Green
+Suvorexant 10mg Tablet,150,5,Green
+Lemborexant 5mg Tablet,120,4,Green
+Doxepin 10mg Capsule,780,26,Green
+Hydroxyzine 25mg Tablet,1110,37,Green
+Meclizine 25mg Tablet,840,28,Green
+Dimenhydrinate 50mg Tablet,900,30,Green
+Scopolamine 1.5mg Patch,210,7,Green
+Ondansetron ODT 4mg,960,32,Green
+Granisetron 1mg Tablet,360,12,Green
+Dolasetron 100mg Tablet,180,6,Green
+Palonosetron 0.25mg IV,60,2,Green
+Aprepitant 125mg Capsule,90,3,Green
+Fosaprepitant 150mg IV,45,2,Green
+Netupitant-Palonosetron 300-0.5mg Capsule,50,2,Green
+Rolapitant 180mg Tablet,40,1,Green
+Prochlorperazine 10mg Tablet,870,29,Green
+Chlorpromazine 25mg Tablet,630,21,Green
+Haloperidol 5mg Tablet,720,24,Green
+Thioridazine 100mg Tablet,300,10,Green
+Perphenazine 4mg Tablet,510,17,Green
+Fluphenazine 5mg Tablet,450,15,Green
+Trifluoperazine 5mg Tablet,390,13,Green
+Loxapine 10mg Capsule,360,12,Green
+Molindone 25mg Tablet,210,7,Green
+Pimozide 2mg Tablet,120,4,Green
+Thiothixene 5mg Capsule,300,10,Green
+Ziprasidone 40mg Capsule,690,23,Green
+Iloperidone 6mg Tablet,240,8,Green
+Paliperidone ER 3mg Tablet,390,13,Green
+Asenapine 5mg SL Tablet,180,6,Green
+Lurasidone 40mg Tablet,420,14,Green
+Cariprazine 1.5mg Capsule,150,5,Green
+Brexpiprazole 1mg Tablet,120,4,Green
+Clozapine 100mg Tablet,360,12,Green
+Lithium Carbonate 300mg Capsule,1200,40,Green
+Valproic Acid 250mg Capsule,990,33,Green
+Carbamazepine 200mg Tablet,1050,35,Green
+Oxcarbazepine 300mg Tablet,1140,38,Green
+Phenytoin 100mg Capsule,930,31,Green
+Fosphenytoin 100mg PE/mL IV,150,5,Green
+Phenobarbital 30mg Tablet,750,25,Green
+Primidone 250mg Tablet,600,20,Green
+Ethosuximide 250mg/5mL Syrup,240,8,Green
+Felbamate 600mg Tablet,180,6,Green
+Gabapentin 600mg Tablet,3300,110,Green
+Pregabalin 75mg Capsule,1680,56,Green
+Levetiracetam 500mg Tablet,2100,70,Green
+Brivaracetam 50mg Tablet,360,12,Green
+Zonisamide 100mg Capsule,810,27,Green
+Tiagabine 4mg Tablet,300,10,Green
+Vigabatrin 500mg Tablet,210,7,Green
+Lacosamide 100mg Tablet,660,22,Green
+Rufinamide 400mg Tablet,390,13,Green
+Clobazam 10mg Tablet,420,14,Green
+Stiripentol 250mg Capsule,90,3,Green
+Cannabidiol 100mg/mL Oral Solution,60,2,Green
+Donepezil 10mg Tablet,900,30,Green
+Rivastigmine 4.6mg/24hr Patch,270,9,Green
+Galantamine ER 16mg Capsule,360,12,Green
+Memantine 10mg Tablet,840,28,Green
+Riluzole Oral Suspension,45,3,Red
+Tetrabenazine 25mg Tablet,180,6,Green
+Deutetrabenazine 12mg Tablet,120,4,Green
+Valbenazine 40mg Capsule,90,3,Green
+Sumatriptan 100mg Tablet,750,25,Green
+Rizatriptan 10mg Tablet,720,24,Green
+Naratriptan 2.5mg Tablet,300,10,Green
+Zolmitriptan 5mg Tablet,450,15,Green
+Almotriptan 12.5mg Tablet,210,7,Green
+Frovatriptan 2.5mg Tablet,180,6,Green
+Eletriptan 40mg Tablet,360,12,Green
+Lasmiditan 100mg Tablet,90,3,Green
+Ubrogepant 50mg Tablet,120,4,Green
+Rimegepant 75mg ODT,150,5,Green
+Erenumab 70mg/mL Syringe,60,2,Green
+Fremanezumab 225mg/1.5mL Syringe,45,2,Green
+Galcanezumab 120mg/mL Pen,50,2,Green
+Eptinezumab 100mg/mL IV,20,1,Green
+Butalbital-APAP-Caffeine 50-325-40mg,900,30,Green
+Dihydroergotamine 4mg/mL Nasal Spray,120,4,Green
+Ergotamine-Caffeine 1-100mg Tablet,300,10,Green
+Methysergide 2mg Tablet,90,3,Green
+Indomethacin 50mg Capsule,810,27,Green
+Naproxen Sodium 550mg Tablet,1080,36,Green
+Ketoprofen 75mg Capsule,720,24,Green
+Flurbiprofen 100mg Tablet,510,17,Green
+Oxaprozin 600mg Tablet,390,13,Green
+Piroxicam 20mg Capsule,420,14,Green
+Nabumetone 500mg Tablet,870,29,Green
+Etodolac 400mg Tablet,960,32,Green
+Tolmetin 400mg Tablet,450,15,Green
+Salsalate 750mg Tablet,600,20,Green
+Choline Magnesium Trisalicylate 500mg,390,13,Green
+Diflunisal 500mg Tablet,360,12,Green
+Baclofen 10mg Tablet,1050,35,Green
+Carisoprodol 350mg Tablet,810,27,Green
+Metaxalone 800mg Tablet,630,21,Green
+Methocarbamol 750mg Tablet,1140,38,Green
+Orphenadrine ER 100mg Tablet,540,18,Green
+Tizanidine 4mg Tablet,1290,43,Green
+Dantrolene 25mg Capsule,240,8,Green
+Alendronate 70mg Tablet,750,25,Green
+Risedronate 35mg Tablet,450,15,Green
+Ibandronate 150mg Tablet,300,10,Green
+Zoledronic Acid 5mg/100mL IV,60,2,Green
+Denosumab 60mg/mL Syringe,90,3,Green
+Raloxifene 60mg Tablet,690,23,Green
+Teriparatide 600mcg/2.4mL Pen,120,4,Green
+Abaloparatide 3120mcg/1.56mL Pen,90,3,Green
+Romosozumab 105mg/1.17mL Syringe,75,3,Green
+Calcitonin-Salmon 200 IU/spray,150,5,Green
+Colchicine 0.6mg Tablet,840,28,Green
+Febuxostat 40mg Tablet,420,14,Green
+Probenecid 500mg Tablet,600,20,Green
+Pegloticase 8mg/mL IV,30,1,Green
+Hydroxyurea 500mg Capsule,390,13,Green
+Anagrelide 0.5mg Capsule,210,7,Green
+Imatinib 400mg Tablet,120,4,Green
+Dasatinib 100mg Tablet,90,3,Green
+Nilotinib 200mg Capsule,60,2,Green
+Bosutinib 500mg Tablet,45,2,Green
+Ponatinib 45mg Tablet,30,1,Green
+Ruxolitinib 10mg Tablet,150,5,Green
+Fedratinib 100mg Capsule,90,3,Green
+Pacritinib 100mg Capsule,60,2,Green
+Cisplatin 50mg/50mL IV,40,1,Green
+Oxaliplatin 100mg/20mL IV,30,1,Green
+Irinotecan 100mg/5mL IV,25,1,Green
+Topotecan 4mg/4mL IV,20,1,Green
+Etoposide 100mg/5mL IV,35,1,Green
+Vinblastine 10mg/10mL IV,15,1,Green
+Vincristine 2mg/2mL IV,10,1,Green
+Vinorelbine 50mg/5mL IV,20,1,Green
+Docetaxel 80mg/4mL IV,25,1,Green
+Paclitaxel 100mg/16.7mL IV,30,1,Green
+Cabazitaxel 60mg/1.5mL IV,15,1,Green
+Ixabepilone 45mg Vial,10,1,Green
+Eribulin 1mg/2mL Vial,15,1,Green
+Doxorubicin 50mg/25mL IV,25,1,Green
+Daunorubicin 20mg/4mL IV,15,1,Green
+Idarubicin 10mg/10mL IV,10,1,Green
+Epirubicin 50mg/25mL IV,20,1,Green
+Mitoxantrone 20mg/10mL IV,15,1,Green
+Bleomycin 15 units/Vial,20,1,Green
+Dactinomycin 0.5mg/Vial,10,1,Green
+Mitomycin 20mg/Vial,15,1,Green
+Gemcitabine 1g/Vial,40,1,Green
+Capecitabine 500mg Tablet,600,20,Green
+Fluorouracil 5g/100mL IV,50,2,Green
+Cytarabine 1g/10mL IV,40,1,Green
+Fludarabine 50mg/2mL IV,25,1,Green
+Cladribine 10mg/10mL IV,15,1,Green
+Nelarabine 250mg/50mL IV,10,1,Green
+Pentostatin 10mg/Vial,5,1,Green
+Pemetrexed 500mg/Vial,30,1,Green
+Methotrexate Sodium Injection,100,5,Blue
+Cyclophosphamide 500mg/Vial,45,2,Green
+Ifosfamide 1g/Vial,30,1,Green
+Carmustine 100mg/Vial,15,1,Green
+Lomustine 100mg Capsule,20,1,Green
+Busulfan 2mg Tablet,120,4,Green
+Melphalan 50mg/Vial,20,1,Green
+Chlorambucil 2mg Tablet,90,3,Green
+Thiotepa 15mg/Vial,10,1,Green
+Dacarbazine 200mg/Vial,15,1,Green
+Temozolomide 100mg Capsule,150,5,Green
+Procarbazine 50mg Capsule,90,3,Green
+Altretamine 50mg Capsule,60,2,Green
+Bendamustine 100mg/Vial,25,1,Green
+Bortezomib 3.5mg/Vial,20,1,Green
+Carfilzomib 60mg/Vial,15,1,Green
+Ixazomib 4mg Capsule,10,1,Green
+Thalidomide 100mg Capsule,120,4,Green
+Lenalidomide 10mg Capsule,150,5,Green
+Pomalidomide 4mg Capsule,90,3,Green
+Interferon alfa-2a 3 MIU/Vial,45,2,Green
+Peginterferon alfa-2a Injection,20,1,Orange
+Aldesleukin 22 MIU/Vial,10,1,Green
+Oprelvekin 5mg/Vial,15,1,Green
+Sargramostim 250mcg/Vial,30,1,Green
+Filgrastim 300mcg/mL Syringe,60,2,Green
+Pegfilgrastim 6mg/0.6mL Syringe,75,3,Green
+Erythropoietin 10000 units/mL Vial,90,3,Green
+Darbepoetin alfa 100mcg/mL Syringe,120,4,Green
+Romiplostim 250mcg/Vial,45,2,Green
+Eltrombopag 50mg Tablet,150,5,Green
+Avatrombopag 20mg Tablet,90,3,Green
+Luspatercept 25mg/Vial,60,2,Green
+Trastuzumab 150mg/Vial,40,1,Green
+Pertuzumab 420mg/14mL Vial,25,1,Green
+Ado-trastuzumab emtansine 100mg/Vial,20,1,Green
+Lapatinib 250mg Tablet,300,10,Green
+Neratinib 40mg Tablet,180,6,Green
+Tucatinib 150mg Tablet,120,4,Green
+Cetuximab 100mg/50mL IV,30,1,Green
+Panitumumab 100mg/5mL IV,20,1,Green
+Necitumumab 800mg/50mL IV,10,1,Green
+Bevacizumab 100mg/4mL IV,40,1,Green
+Ramucirumab 100mg/10mL IV,25,1,Green
+Ziv-aflibercept 100mg/4mL IV,20,1,Green
+Ipilimumab 50mg/10mL IV,15,1,Green
+Nivolumab 100mg/10mL IV,30,1,Green
+Pembrolizumab 100mg/4mL IV,40,1,Green
+Atezolizumab 1200mg/20mL IV,25,1,Green
+Avelumab 200mg/10mL IV,20,1,Green
+Durvalumab 500mg/10mL IV,25,1,Green
+Cemiplimab 350mg/7mL IV,15,1,Green
+Vemurafenib 240mg Tablet,240,8,Green
+Dabrafenib 75mg Capsule,180,6,Green
+Trametinib 2mg Tablet,120,4,Green
+Cobimetinib 20mg Tablet,90,3,Green
+Binimetinib 15mg Tablet,60,2,Green
+Encorafenib 75mg Capsule,120,4,Green
+Crizotinib 250mg Capsule,150,5,Green
+Ceritinib 150mg Tablet,90,3,Green
+Alectinib 150mg Capsule,120,4,Green
+Brigatinib 90mg Tablet,90,3,Green
+Lorlatinib 100mg Tablet,60,2,Green
+Erlotinib 150mg Tablet,210,7,Green
+Gefitinib 250mg Tablet,180,6,Green
+Afatinib 40mg Tablet,120,4,Green
+Osimertinib 80mg Tablet,150,5,Green
+Dacomitinib 45mg Tablet,90,3,Green
+Sunitinib 50mg Capsule,180,6,Green
+Sorafenib 200mg Tablet,240,8,Green
+Pazopanib 400mg Tablet,150,5,Green
+Axitinib 5mg Tablet,120,4,Green
+Cabozantinib 60mg Tablet,90,3,Green
+Lenvatinib 10mg Capsule,120,4,Green
+Regorafenib 40mg Tablet,90,3,Green
+Vandetanib 300mg Tablet,60,2,Green
+Tivozanib 1.34mg Capsule,45,2,Green
+Everolimus 10mg Tablet,120,4,Green
+Temsirolimus 25mg/mL IV,30,1,Green
+Palbociclib 125mg Capsule,150,5,Green
+Ribociclib 200mg Tablet,120,4,Green
+Abemaciclib 150mg Tablet,90,3,Green
+Alpelisib 200mg Tablet,60,2,Green
+Copanlisib 60mg/Vial,30,1,Green
+Duvelisib 25mg Capsule,90,3,Green
+Idelalisib 150mg Tablet,120,4,Green
+Umbralisib 200mg Tablet,60,2,Green
+Olaparib 150mg Tablet,150,5,Green
+Rucaparib 300mg Tablet,90,3,Green
+Niraparib 100mg Capsule,120,4,Green
+Talazoparib 1mg Capsule,60,2,Green
+Ibrutinib 140mg Capsule,180,6,Green
+Acalabrutinib 100mg Capsule,150,5,Green
+Zanubrutinib 80mg Capsule,120,4,Green
+Venetoclax 100mg Tablet,120,4,Green
+Glasdegib 100mg Tablet,60,2,Green
+Sonidegib 200mg Capsule,90,3,Green
+Vismodegib 150mg Capsule,120,4,Green
+Enzalutamide 40mg Capsule,150,5,Green
+Abiraterone 250mg Tablet,300,10,Green
+Apalutamide 60mg Tablet,120,4,Green
+Darolutamide 300mg Tablet,90,3,Green
+Mifepristone 200mg Tablet,60,2,Green
+Leuprolide 7.5mg/month Depot,45,2,Green
+Goserelin 3.6mg implant,30,1,Green
+Histrelin 50mg implant,15,1,Green
+Triptorelin 3.75mg/month Depot,25,1,Green
+Degarelix 80mg/Vial,20,1,Green
+Bicalutamide 50mg Tablet,450,15,Green
+Flutamide 250mg Capsule,300,10,Green
+Nilutamide 150mg Tablet,150,5,Green
+Tamoxifen 20mg Tablet,900,30,Green
+Toremifene 60mg Tablet,180,6,Green
+Fulvestrant 250mg/5mL Syringe,60,2,Green
+Anastrozole 1mg Tablet,1200,40,Green
+Letrozole 2.5mg Tablet,1110,37,Green
+Exemestane 25mg Tablet,750,25,Green
+Megestrol 40mg Tablet,600,20,Green
+Medroxyprogesterone 10mg Tablet,900,30,Green
+Somatropin Injection,10,2,Red
+Ketorolac Tromethamine Injection,100,5,Blue
+Nitroglycerin Injection,80,8,Green
