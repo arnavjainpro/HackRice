@@ -1,7 +1,6 @@
 Name,Quantity,avg_daily_dispensed
 Acyclovir 400mg Tablet,680,34
 Rocuronium Bromide Injection,150,10
-Cefotaxime Sodium Powder, for Solution,90,6
 Ondansetron 4mg Tablet,975,39
 Duloxetine DR 60mg Capsule,1560,52
 Glipizide XL 5mg Tablet,990,33
@@ -13,10 +12,8 @@ Bumetanide Injection,126,9
 Meloxicam 15mg Tablet,2010,67
 Promethazine Hydrochloride Injection,60,12
 Fluconazole 150mg Tablet,420,21
-Methylphenidate Film, Extended Release,25,5
 Clopidogrel 75mg Tablet,2490,83
 Azithromycin 250mg Tablet,66,11
-Epinephrine Bitartrate, Lidocaine Hydrochloride Injection,72,8
 Trazodone 100mg Tablet,1950,65
 Alprazolam 0.5mg Tablet,1050,35
 Warfarin 5mg Tablet,1350,45
@@ -24,7 +21,6 @@ Metronidazole Injection,210,15
 Desmopressin Acetate Spray,108,12
 Prednisone 10mg Tablet,840,42
 Doxycycline Hyclate 100mg Capsule,720,36
-Amoxicillin Powder, For Suspension,60,20
 Atenolol 25mg Tablet,1650,55
 Cyclobenzaprine 10mg Tablet,1440,48
 Citalopram 20mg Tablet,2070,69
@@ -38,7 +34,6 @@ Omeprazole DR 20mg Capsule,2910,97
 Ciprofloxacin 500mg Tablet,495,31
 Metoprolol Succinate XL 50mg Tablet,2610,87
 Carboplatin Injection,20,5
-Methylprednisolone Acetate Injection,240,12
 Furosemide Injection,120,8
 Dextrose Monohydrate 50% Injection,70,10
 Acetaminophen-Codeine 300-30mg Tablet,600,30
@@ -87,7 +82,6 @@ Triamcinolone Acetonide Injection,42,3
 Fluticasone Propionate 50mcg Nasal Spray,390,13
 Levothyroxine 50mcg Tablet,3000,100
 Amitriptyline 25mg Tablet,930,31
-Amphetamine Aspartate Monohydrate, Amphetamine Sulfate, Dextroamphetamine Saccharate, Dextroamphetamine Sulfate Tablet,120,4
 Albuterol Sulfate Solution,120,15
 Sulfamethoxazole-Trimethoprim 800-160mg Tablet,630,32
 Lisdexamfetamine Dimesylate Capsule,300,10
