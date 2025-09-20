@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Button, Alert } from './ui'
-import { Pill, Activity, AlertOctagon, AlertTriangle, RefreshCw, Send, Copy, X, Lightbulb } from 'lucide-react'
+import { Pill, AlertOctagon, AlertTriangle, RefreshCw, Send, Copy, X, Lightbulb, ShieldAlert } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 // Enhanced Dashboard with RxBridge functionality
@@ -17,8 +17,6 @@ const Dashboard = () => {
   const [selectedAlert, setSelectedAlert] = useState(null)
   const [communicationModalOpen, setCommunicationModalOpen] = useState(false)
   const [selectedDrug, setSelectedDrug] = useState(null)
-  const [isSimulationLoading, setIsSimulationLoading] = useState(false)
-  const [selectedDrugForSimulation, setSelectedDrugForSimulation] = useState('')
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
@@ -34,7 +32,8 @@ const Dashboard = () => {
       avg_daily_use: 15,
       days_of_supply: 8,
       hasAlert: true,
-      alertSeverity: 'CRITICAL'
+      alertSeverity: 'CRITICAL',
+      isRecalled: false
     },
     {
       id: 2,
@@ -42,7 +41,8 @@ const Dashboard = () => {
       stock_level: 450,
       avg_daily_use: 32,
       days_of_supply: 14,
-      hasAlert: false
+      hasAlert: false,
+      isRecalled: false
     },
     {
       id: 3,
@@ -51,7 +51,8 @@ const Dashboard = () => {
       avg_daily_use: 22,
       days_of_supply: 4,
       hasAlert: true,
-      alertSeverity: 'AWARENESS'
+      alertSeverity: 'AWARENESS',
+      isRecalled: false
     },
     {
       id: 4,
@@ -59,7 +60,8 @@ const Dashboard = () => {
       stock_level: 256,
       avg_daily_use: 18,
       days_of_supply: 14,
-      hasAlert: false
+      hasAlert: false,
+      isRecalled: false
     },
     {
       id: 5,
@@ -68,7 +70,59 @@ const Dashboard = () => {
       avg_daily_use: 12,
       days_of_supply: 6,
       hasAlert: true,
-      alertSeverity: 'ROUTINE_REORDER'
+      alertSeverity: 'ROUTINE_REORDER',
+      isRecalled: false
+    },
+    {
+      id: 6,
+      drug_name: 'Losartan 50mg',
+      stock_level: 240,
+      avg_daily_use: 28,
+      days_of_supply: 8,
+      hasAlert: true,
+      alertSeverity: 'CRITICAL',
+      isRecalled: true,
+      recallInfo: {
+        recallDate: '2025-09-15',
+        recallReason: 'Potential carcinogen contamination - NDMA impurity detected',
+        recallSeverity: 'Class I',
+        recallNumber: 'Z-1234-2025',
+        fda_url: 'https://www.fda.gov/safety/recalls'
+      }
+    },
+    {
+      id: 7,
+      drug_name: 'Valsartan 160mg',
+      stock_level: 156,
+      avg_daily_use: 22,
+      days_of_supply: 7,
+      hasAlert: true,
+      alertSeverity: 'CRITICAL',
+      isRecalled: true,
+      recallInfo: {
+        recallDate: '2025-09-10',
+        recallReason: 'Manufacturing defect - incorrect labeling on bottles',
+        recallSeverity: 'Class II',
+        recallNumber: 'Z-5678-2025',
+        fda_url: 'https://www.fda.gov/safety/recalls'
+      }
+    },
+    {
+      id: 8,
+      drug_name: 'Ranitidine 150mg',
+      stock_level: 89,
+      avg_daily_use: 15,
+      days_of_supply: 6,
+      hasAlert: true,
+      alertSeverity: 'CRITICAL',
+      isRecalled: true,
+      recallInfo: {
+        recallDate: '2025-09-08',
+        recallReason: 'NDMA contamination above acceptable limits',
+        recallSeverity: 'Class I',
+        recallNumber: 'Z-9012-2025',
+        fda_url: 'https://www.fda.gov/safety/recalls'
+      }
     }
   ])
 
@@ -93,6 +147,30 @@ const Dashboard = () => {
       severity: 'ROUTINE_REORDER',
       description: 'Routine reorder suggested based on usage patterns',
       timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000)
+    },
+    {
+      id: 4,
+      drug_name: 'Losartan 50mg',
+      severity: 'RECALL',
+      description: 'FDA Class I Recall: Potential carcinogen contamination - NDMA impurity detected. Stop dispensing immediately.',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      recallNumber: 'Z-1234-2025'
+    },
+    {
+      id: 5,
+      drug_name: 'Valsartan 160mg',
+      severity: 'RECALL',
+      description: 'FDA Class II Recall: Manufacturing defect - incorrect labeling on bottles. Verify all prescriptions.',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      recallNumber: 'Z-5678-2025'
+    },
+    {
+      id: 6,
+      drug_name: 'Ranitidine 150mg',
+      severity: 'RECALL',
+      description: 'FDA Class I Recall: NDMA contamination above acceptable limits. Immediate withdrawal required.',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      recallNumber: 'Z-9012-2025'
     }
   ])
 
@@ -136,49 +214,6 @@ const Dashboard = () => {
     setCommunicationModalOpen(true)
   }
 
-  const handleTriggerShortage = (selectedDrugName) => {
-    if (!selectedDrugName) return
-    
-    setIsSimulationLoading(true)
-    
-    setTimeout(() => {
-      // Create a new alert for the shortage
-      const newAlert = {
-        id: Date.now(),
-        drug_name: selectedDrugName,
-        severity: Math.random() > 0.5 ? 'CRITICAL' : 'AWARENESS',
-        timestamp: new Date().toISOString(),
-        description: `Simulated shortage event triggered for ${selectedDrugName}. Current inventory levels have been reduced.`,
-        days_remaining: Math.floor(Math.random() * 5) + 1
-      }
-      
-      // Add the new alert to the alerts array
-      setAlerts(prevAlerts => [newAlert, ...prevAlerts])
-      
-      // Update inventory levels for the selected drug
-      setInventoryList(prevInventory => 
-        prevInventory.map(item => {
-          if (item.drug_name === selectedDrugName) {
-            const newStockLevel = Math.max(10, Math.floor(item.stock_level * 0.3)) // Reduce to 30% or minimum 10
-            const newDaysOfSupply = Math.floor(newStockLevel / item.avg_daily_use)
-            return {
-              ...item,
-              stock_level: newStockLevel,
-              days_of_supply: newDaysOfSupply,
-              hasAlert: true,
-              alertSeverity: newAlert.severity
-            }
-          }
-          return item
-        })
-      )
-      
-      setIsSimulationLoading(false)
-      setSelectedDrugForSimulation('')
-      toast.success(`Successfully triggered shortage event for ${selectedDrugName}!`)
-    }, 2000)
-  }
-
   const getSeverityConfig = (severity) => {
     switch (severity) {
       case 'CRITICAL':
@@ -202,6 +237,13 @@ const Dashboard = () => {
           icon: RefreshCw,
           iconColor: '#2563eb'
         }
+      case 'RECALL':
+        return {
+          borderColor: 'border-l-red-600',
+          bgColor: '#fef1f1',
+          icon: ShieldAlert,
+          iconColor: '#b91c1c'
+        }
       default:
         return {
           borderColor: 'border-l-slate-500',
@@ -219,6 +261,14 @@ const Dashboard = () => {
   }
 
   const getRowStyle = (item) => {
+    // Recalled medicines get highest priority styling
+    if (item.isRecalled) {
+      return { 
+        backgroundColor: '#fef1f1',
+        borderLeft: '4px solid #dc2626'
+      }
+    }
+    
     if (!item.hasAlert) return { backgroundColor: '#ffffff' }
     
     switch (item.alertSeverity) {
@@ -242,41 +292,53 @@ const Dashboard = () => {
           </Alert>
         )}
 
-        <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 400px', gap: '2rem' }}>
+        <div className="dashboard-grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
           {/* Left Column - Inventory Table */}
           <div className="card">
-            <h2 style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              📊 Inventory Overview
-            </h2>
+            <h2 data-icon="📊">Inventory Overview</h2>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className="inventory-table">
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #fecaca' }}>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>Drug Name</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>Stock Level</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>Avg Daily Use</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>Days of Supply</th>
+                  <tr>
+                    <th>Drug Name</th>
+                    <th>Stock Level</th>
+                    <th>Avg Daily Use</th>
+                    <th>Days of Supply</th>
                   </tr>
                 </thead>
                 <tbody>
                   {inventoryList.map((item) => (
-                    <tr key={item.id} style={{ ...getRowStyle(item), borderBottom: '1px solid #f3f4f6' }}>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ color: '#111827', fontWeight: '500' }}>{item.drug_name}</div>
+                    <tr key={item.id} style={getRowStyle(item)} className={item.isRecalled ? 'recalled-drug' : ''}>
+                      <td>
+                        <div className="drug-name">
+                          {item.drug_name}
+                          {item.isRecalled && (
+                            <span className="recall-badge">RECALLED</span>
+                          )}
+                        </div>
                         {item.hasAlert && (
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                            Alert: {item.alertSeverity.replace('_', ' ').toLowerCase()}
+                          <div className="drug-alert">
+                            Alert: {item.alertSeverity.replace('_', ' ')}
+                          </div>
+                        )}
+                        {item.isRecalled && item.recallInfo && (
+                          <div className="recall-info">
+                            Recall: {item.recallInfo.recallSeverity} - {item.recallInfo.recallReason}
                           </div>
                         )}
                       </td>
-                      <td style={{ padding: '1rem', color: getStockLevelColor(item.days_of_supply), fontWeight: item.days_of_supply <= 10 ? 'bold' : 'normal' }}>
-                        {item.stock_level} units
+                      <td>
+                        <span className={`stock-level ${item.days_of_supply <= 5 ? 'stock-critical' : item.days_of_supply <= 10 ? 'stock-warning' : 'stock-normal'}`}>
+                          {item.stock_level} units
+                        </span>
                       </td>
-                      <td style={{ padding: '1rem', color: '#111827' }}>
+                      <td style={{ color: '#475569', fontWeight: '500' }}>
                         {item.avg_daily_use} units/day
                       </td>
-                      <td style={{ padding: '1rem', color: getStockLevelColor(item.days_of_supply), fontWeight: 'bold' }}>
-                        {item.days_of_supply} days
+                      <td>
+                        <span className={`stock-level ${item.days_of_supply <= 5 ? 'stock-critical' : item.days_of_supply <= 10 ? 'stock-warning' : 'stock-normal'}`}>
+                          {item.days_of_supply} days
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -287,60 +349,14 @@ const Dashboard = () => {
 
           {/* Right Column - Controls */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Simulation Panel */}
-            <div className="card" style={{ border: '2px dashed #fecaca' }}>
-              <h2 style={{ color: '#dc2626' }}>🎯 Simulation Panel</h2>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
-                <strong>For Demo Purposes</strong>
-              </p>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontSize: '0.875rem', fontWeight: '500' }}>
-                  Select Drug to Simulate Shortage
-                </label>
-                <select
-                  value={selectedDrugForSimulation}
-                  onChange={(e) => setSelectedDrugForSimulation(e.target.value)}
-                  disabled={isSimulationLoading}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    background: '#ffffff',
-                    color: '#111827',
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  <option value="">Choose a drug...</option>
-                  {inventoryList.map((item) => (
-                    <option key={item.id} value={item.drug_name}>
-                      {item.drug_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button
-                fullWidth
-                onClick={() => handleTriggerShortage(selectedDrugForSimulation)}
-                disabled={!selectedDrugForSimulation || isSimulationLoading}
-                loading={isSimulationLoading}
-                style={{ background: '#ea580c', borderColor: '#ea580c', color: '#ffffff' }}
-              >
-                <Activity style={{ width: '1rem', height: '1rem' }} />
-                Trigger Shortage Event
-              </Button>
-            </div>
-
             {/* Alert Feed */}
             <div className="card">
-              <h2 style={{ color: '#dc2626' }}>🚨 Alert Feed ({alerts.length})</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <h2 data-icon="🚨">Alert Feed ({alerts.length})</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                 {alerts.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '2rem' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✅</div>
-                    <p style={{ color: '#6b7280' }}>No new alerts. All systems normal.</p>
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+                    <p style={{ color: '#64748b', fontSize: '1rem', fontWeight: '500' }}>No new alerts. All systems normal.</p>
                   </div>
                 ) : (
                   alerts.map((alert) => {
@@ -351,39 +367,19 @@ const Dashboard = () => {
                       <div
                         key={alert.id}
                         onClick={() => handleAlertClick(alert)}
-                        style={{
-                          ...getRowStyle({ hasAlert: true, alertSeverity: alert.severity }),
-                          border: '1px solid #e5e7eb',
-                          borderLeft: `4px solid ${config.iconColor}`,
-                          borderRadius: '8px',
-                          padding: '1rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.transform = 'translateY(-1px)'
-                          e.target.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.15)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.transform = 'translateY(0)'
-                          e.target.style.boxShadow = 'none'
-                        }}
+                        className={`alert-feed-item ${alert.severity.toLowerCase()}`}
                       >
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                          <IconComponent style={{ width: '1.25rem', height: '1.25rem', color: config.iconColor, flexShrink: 0, marginTop: '0.125rem' }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                              <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {alert.drug_name}
-                              </h4>
-                              <span style={{ fontSize: '0.75rem', color: '#6b7280', flexShrink: 0, marginLeft: '0.5rem' }}>
-                                {Math.floor((Date.now() - alert.timestamp) / (1000 * 60 * 60))}h ago
-                              </span>
-                            </div>
-                            <p style={{ margin: 0, fontSize: '0.875rem', color: '#374151', lineHeight: '1.4' }}>
-                              {alert.description}
-                            </p>
+                        <div className="alert-header">
+                          <div className="alert-icon">
+                            <IconComponent style={{ width: '1.25rem', height: '1.25rem', color: config.iconColor }} />
                           </div>
+                          <div className="alert-content">
+                            <h4 className="alert-title">{alert.drug_name}</h4>
+                            <p className="alert-description">{alert.description}</p>
+                          </div>
+                          <span className="alert-time">
+                            {Math.floor((Date.now() - alert.timestamp) / (1000 * 60 * 60))}h ago
+                          </span>
                         </div>
                       </div>
                     )
