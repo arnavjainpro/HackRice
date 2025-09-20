@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Button, Alert } from './ui'
-import { Pill, Activity, AlertOctagon, AlertTriangle, RefreshCw, Send, Copy, X, Lightbulb } from 'lucide-react'
+import { Pill, AlertOctagon, AlertTriangle, RefreshCw, Send, Copy, X, Lightbulb } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 // Enhanced Dashboard with RxBridge functionality
@@ -17,8 +17,6 @@ const Dashboard = () => {
   const [selectedAlert, setSelectedAlert] = useState(null)
   const [communicationModalOpen, setCommunicationModalOpen] = useState(false)
   const [selectedDrug, setSelectedDrug] = useState(null)
-  const [isSimulationLoading, setIsSimulationLoading] = useState(false)
-  const [selectedDrugForSimulation, setSelectedDrugForSimulation] = useState('')
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
@@ -136,49 +134,6 @@ const Dashboard = () => {
     setCommunicationModalOpen(true)
   }
 
-  const handleTriggerShortage = (selectedDrugName) => {
-    if (!selectedDrugName) return
-    
-    setIsSimulationLoading(true)
-    
-    setTimeout(() => {
-      // Create a new alert for the shortage
-      const newAlert = {
-        id: Date.now(),
-        drug_name: selectedDrugName,
-        severity: Math.random() > 0.5 ? 'CRITICAL' : 'AWARENESS',
-        timestamp: new Date().toISOString(),
-        description: `Simulated shortage event triggered for ${selectedDrugName}. Current inventory levels have been reduced.`,
-        days_remaining: Math.floor(Math.random() * 5) + 1
-      }
-      
-      // Add the new alert to the alerts array
-      setAlerts(prevAlerts => [newAlert, ...prevAlerts])
-      
-      // Update inventory levels for the selected drug
-      setInventoryList(prevInventory => 
-        prevInventory.map(item => {
-          if (item.drug_name === selectedDrugName) {
-            const newStockLevel = Math.max(10, Math.floor(item.stock_level * 0.3)) // Reduce to 30% or minimum 10
-            const newDaysOfSupply = Math.floor(newStockLevel / item.avg_daily_use)
-            return {
-              ...item,
-              stock_level: newStockLevel,
-              days_of_supply: newDaysOfSupply,
-              hasAlert: true,
-              alertSeverity: newAlert.severity
-            }
-          }
-          return item
-        })
-      )
-      
-      setIsSimulationLoading(false)
-      setSelectedDrugForSimulation('')
-      toast.success(`Successfully triggered shortage event for ${selectedDrugName}!`)
-    }, 2000)
-  }
-
   const getSeverityConfig = (severity) => {
     switch (severity) {
       case 'CRITICAL':
@@ -289,44 +244,6 @@ const Dashboard = () => {
 
           {/* Right Column - Controls */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Simulation Panel */}
-            <div className="card simulation-panel">
-              <h2 data-icon="🎯">Simulation Panel</h2>
-              <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1.5rem', fontWeight: '500' }}>
-                <strong>For Demo Purposes</strong>
-              </p>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.75rem', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>
-                  Select Drug to Simulate Shortage
-                </label>
-                <select
-                  value={selectedDrugForSimulation}
-                  onChange={(e) => setSelectedDrugForSimulation(e.target.value)}
-                  disabled={isSimulationLoading}
-                  className="simulation-select"
-                >
-                  <option value="">Choose a drug...</option>
-                  {inventoryList.map((item) => (
-                    <option key={item.id} value={item.drug_name}>
-                      {item.drug_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button
-                fullWidth
-                onClick={() => handleTriggerShortage(selectedDrugForSimulation)}
-                disabled={!selectedDrugForSimulation || isSimulationLoading}
-                loading={isSimulationLoading}
-                className="simulation-button"
-              >
-                <Activity style={{ width: '1.25rem', height: '1.25rem' }} />
-                Trigger Shortage Event
-              </Button>
-            </div>
-
             {/* Alert Feed */}
             <div className="card">
               <h2 data-icon="🚨">Alert Feed ({alerts.length})</h2>

@@ -95,20 +95,6 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Desktop Search Bar */}
-          {!isMobile && (
-            <div className="navbar-search">
-              <div className="search-container">
-                <Search className="search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search medications, suppliers, or alerts..."
-                  className="search-input"
-                />
-              </div>
-            </div>
-          )}
-
           {/* Desktop Navigation */}
           {!isMobile && (
             <div className="navbar-actions">
