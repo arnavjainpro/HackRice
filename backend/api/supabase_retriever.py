@@ -18,11 +18,12 @@ class SupabaseRetriever:
             url: Supabase URL (optional, will use env var if not provided)
             key: Supabase anon key (optional, will use env var if not provided)
         """
-        self.url = url or os.getenv('SUPABASE_URL')
-        self.key = key or os.getenv('SUPABASE_KEY')
+        # Use the same environment variables as frontend
+        self.url = url or os.getenv('VITE_SUPABASE_URL')
+        self.key = key or os.getenv('VITE_SUPABASE_ANON_KEY')
         
         if not self.url or not self.key:
-            raise ValueError("Supabase URL and key are required")
+            raise ValueError("Supabase URL and key are required. Check your .env file for VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY")
             
         self.client: Client = create_client(self.url, self.key)
         # ✅ FIXED: Correct table name
