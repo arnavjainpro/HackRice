@@ -70,23 +70,6 @@ class InventoryChecker:
         # Convert to lowercase and strip whitespace
         clean_name = str(name).lower().strip()
         
-        # Remove common suffixes that might interfere with matching
-        suffixes_to_remove = [
-            r'\s+injection.*$',
-            r'\s+tablet.*$', 
-            r'\s+capsule.*$',
-            r'\s+solution.*$',
-            r'\s+powder.*$',
-            r'\s+suspension.*$',
-            r'\s+syrup.*$',
-            r'\s+gel.*$',
-            r'\s+cream.*$',
-            r'\s+ointment.*$'
-        ]
-        
-        for suffix in suffixes_to_remove:
-            clean_name = re.sub(suffix, '', clean_name)
-        
         # Remove extra whitespace and special characters
         clean_name = re.sub(r'[^\w\s]', ' ', clean_name)
         clean_name = re.sub(r'\s+', ' ', clean_name).strip()
@@ -220,158 +203,6 @@ class InventoryChecker:
             logger.error(f"Failed to get inventory data: {e}")
             return pd.DataFrame()
     
-    def check_inventory_risks(self) -> pd.DataFrame:
-        """
-        Main function to check inventory against FDA data
-        
-        Returns:
-            DataFrame with flagged inventory items
-        """
-        print("=" * 60)
-        print("STARTING INVENTORY RISK CHECK")
-        print("=" * 60)
-        
-        # Get data
-        fda_df = self.get_fda_data()
-        inventory_df = self.get_inventory_data()
-        
-        if fda_df.empty:
-            print("❌ No FDA data available for comparison")
-            return pd.DataFrame()
-        
-        if inventory_df.empty:
-            print("❌ No inventory data available")
-            return pd.DataFrame()
-        
-        print(f"\n📊 DATA SUMMARY:")
-        print(f"   FDA entries: {len(fda_df)}")
-        print(f"   Inventory items: {len(inventory_df)}")
-        
-        # Show sample FDA data
-        print(f"\n🔍 SAMPLE FDA DATA:")
-        for i, row in fda_df.head(3).iterrows():
-            print(f"   - {row['fda_drug_name']} → {row['status']}")
-        
-        # Show sample inventory data  
-        print(f"\n📦 SAMPLE INVENTORY DATA:")
-        for i, row in inventory_df.head(3).iterrows():
-            stock = row.get('stock', 0)
-            print(f"   - {row.get('drug_name', 'Unknown')} (Stock: {stock})")
-        
-        # Prepare for matching
-        fda_names = fda_df['fda_drug_name'].tolist()
-        flagged_items = []
-        
-        print(f"\n🔄 STARTING MATCHING PROCESS...")
-        print("-" * 40)
-        
-        # Check each inventory item
-        for idx, inv_row in inventory_df.iterrows():
-            drug_name = inv_row.get('drug_name', '')
-            
-            # Find match in FDA data
-            matched_name, confidence, match_type = self.find_drug_match(drug_name, fda_names)
-            
-            if matched_name and confidence >= self.fuzzy_match_threshold:
-                # Get FDA info for matched drug
-                fda_info = fda_df[fda_df['fda_drug_name'] == matched_name].iloc[0]
-                
-                # Determine severity and alert level
-                severity = self._calculate_severity(
-                    fda_info['status'],
-                    fda_info.get('recall_classification', ''),
-                    days_supply,
-                    stock
-                )
-                
-                alert_level = self._calculate_dashboard_alert_level(
-                    fda_info['status'],
-                    fda_info.get('recall_classification', ''),
-                    days_supply,
-                    severity
-                )
-                
-                # Print match details
-                print(f"🚨 MATCH FOUND:")
-                print(f"   Inventory: {drug_name}")
-                print(f"   FDA Match: {matched_name}")
-                print(f"   Confidence: {confidence}% ({match_type})")
-                print(f"   Status: {fda_info['status']}")
-                print(f"   Stock: {stock} units")
-                print(f"   Days Supply: {days_supply:.1f}")
-                print(f"   Severity: {severity}")
-                print(f"   Alert Level: {alert_level}")  # Show dashboard alert level
-                if fda_info.get('recall_classification'):
-                    print(f"   Recall Class: {fda_info['recall_classification']}")
-                print("-" * 40)
-                
-                flagged_item = {
-                    # Inventory info
-                    'drug_name': drug_name,
-                    'current_stock': stock,
-                    'average_daily_dispense': daily_dispense,
-                    'days_of_supply': days_supply,
-                    
-                    # FDA matching info
-                    'fda_matched_name': matched_name,
-                    'match_confidence': confidence,
-                    'match_type': match_type,
-                    
-                    # Risk flags
-                    'flag_status': fda_info['status'],
-                    'flag_source': fda_info['source'],
-                    'recall_classification': fda_info.get('recall_classification', ''),
-                    'recall_reason': fda_info.get('recall_reason', ''),
-                    
-                    # Calculated fields
-                    'priority_score': self.priority_map.get(fda_info['status'], 0),
-                    'severity': severity,
-                    'requires_immediate_action': severity in ['Critical', 'High']
-                }
-                
-                flagged_items.append(flagged_item)
-            else:
-                # Optionally show non-matches for first few items
-                if idx < 5:  # Only show first 5 non-matches to avoid spam
-                    print(f"✅ No match: {drug_name}")
-        
-        print("\n" + "=" * 60)
-        print("FINAL RESULTS")
-        print("=" * 60)
-        
-        if flagged_items:
-            result_df = pd.DataFrame(flagged_items)
-            # Sort by priority and severity
-            result_df = result_df.sort_values(['priority_score', 'severity'], ascending=[False, False])
-            
-            print(f"🚨 FOUND {len(result_df)} FLAGGED ITEMS:")
-            
-            # Count by status
-            status_counts = result_df['flag_status'].value_counts()
-            for status, count in status_counts.items():
-                print(f"   📊 {status}: {count} items")
-            
-            # Count by severity
-            severity_counts = result_df['severity'].value_counts()
-            print(f"\n📈 SEVERITY BREAKDOWN:")
-            for severity, count in severity_counts.items():
-                print(f"   🔥 {severity}: {count} items")
-            
-            # Show top 5 critical items
-            critical_items = result_df[result_df['severity'].isin(['Critical', 'High'])]
-            if not critical_items.empty:
-                print(f"\n⚠️  TOP PRIORITY ITEMS:")
-                for _, item in critical_items.head(5).iterrows():
-                    print(f"   - {item['drug_name']} ({item['flag_status']}) - {item['severity']}")
-            
-            print(f"\n📋 FULL RESULTS DATAFRAME:")
-            print(result_df[['drug_name', 'flag_status', 'severity', 'current_stock', 'days_of_supply']].to_string())
-            
-            return result_df
-        else:
-            print("✅ No flagged items found - all inventory items are safe!")
-            return pd.DataFrame()
-    
     def _calculate_severity(self, status: str, recall_class: str, days_supply: float, stock: int) -> str:
         """
         Calculate severity level based on multiple factors
@@ -438,7 +269,7 @@ class InventoryChecker:
             if weeks_supply < 2:  # Less than 2 weeks
                 return 'RED'
             elif weeks_supply <= 8.57:  # 2 weeks to 60 days (60/7 = 8.57 weeks)
-                return 'ORANGE' 
+                return 'PURPLE' 
             else:  # Greater than 60 days but still flagged
                 return 'YELLOW'
         else:
@@ -451,7 +282,7 @@ class InventoryChecker:
         
     def check_inventory_risks(self) -> pd.DataFrame:
         """
-        Main function to check inventory against FDA data - Updated for new alert system
+        Main function to check inventory against FDA data - Updated for separated arrays
         
         Returns:
             DataFrame with flagged inventory items AND low stock items
@@ -569,7 +400,7 @@ class InventoryChecker:
                     'alert_level': alert_level,
                     'priority_score': self.priority_map.get(fda_match['status'], 0) if is_flagged else 0,
                     'severity': severity,
-                    'requires_immediate_action': alert_level in ['RED', 'ORANGE'],
+                    'requires_immediate_action': alert_level in ['RED', 'PURPLE'],
                     'has_fda_issue': is_flagged
                 }
                 
@@ -579,82 +410,137 @@ class InventoryChecker:
                 if idx < 5:
                     print(f"✅ No issues: {drug_name} ({days_supply:.1f} days supply)")
         
-        print("\n" + "=" * 60)
-        print("FINAL RESULTS")
-        print("=" * 60)
+        # Create JSON response format with separated arrays
+        response_data = self._format_api_response(flagged_items)
         
+        # Print JSON output
+        import json
+        print("\n" + "=" * 60)
+        print("JSON RESPONSE WITH SEPARATED ARRAYS")
+        print("=" * 60)
+        print(json.dumps(response_data, indent=2, default=str))
+        
+        # Print summary of separation
+        print(f"\n📊 SEPARATION SUMMARY:")
+        print(f"   Recalls: {len(response_data['recalls'])} items")
+        print(f"   Other Alerts: {len(response_data['other_alerts'])} items")
+        print(f"   Total: {len(flagged_items)} items")
+        
+        # Also return DataFrame for backwards compatibility
         if flagged_items:
             result_df = pd.DataFrame(flagged_items)
             # Sort by alert level priority then by days of supply
-            alert_priority = {'RED': 4, 'ORANGE': 3, 'YELLOW': 2, 'BLUE': 1}
+            alert_priority = {'RED': 4, 'PURPLE': 3, 'YELLOW': 2, 'BLUE': 1}
             result_df['alert_priority'] = result_df['alert_level'].map(alert_priority)
             result_df = result_df.sort_values(['alert_priority', 'days_of_supply'], ascending=[False, True])
-            
-            print(f"🚨 FOUND {len(result_df)} ITEMS REQUIRING ATTENTION:")
-            
-            # Count by alert level
-            alert_counts = result_df['alert_level'].value_counts()
-            for alert, count in alert_counts.items():
-                print(f"   📊 {alert}: {count} items")
-            
-            # Show top priority items
-            critical_items = result_df[result_df['alert_level'].isin(['RED', 'ORANGE'])]
-            if not critical_items.empty:
-                print(f"\n⚠️ TOP PRIORITY ITEMS:")
-                for _, item in critical_items.head(5).iterrows():
-                    print(f"   - {item['drug_name']} ({item['alert_level']}) - {item['days_of_supply']:.1f} days")
-            
-            print(f"\n📋 FULL RESULTS DATAFRAME:")
-            display_cols = ['drug_name', 'alert_level', 'flag_status', 'current_stock', 'days_of_supply']
-            print(result_df[display_cols].to_string())
-            
             return result_df.drop('alert_priority', axis=1)  # Remove helper column
         else:
-            print("✅ No items requiring attention - all inventory levels are adequate!")
             return pd.DataFrame()
+    
+    def _format_api_response(self, flagged_items: list) -> dict:
         """
-        Calculate severity level based on multiple factors
+        Format flagged items as API response JSON with separate arrays for recalls and other alerts
         
         Args:
-            status: FDA status (Recalled, Currently in Shortage, etc.)
-            recall_class: Recall classification (Class I, II, III)
-            days_supply: Days of supply remaining
-            stock: Current stock level
+            flagged_items: List of flagged item dictionaries
             
         Returns:
-            Severity level string
+            Formatted API response dictionary with separate recall and non-recall arrays
         """
-        # Recalled items
-        if status == 'Recalled':
-            if recall_class == 'Class I':
-                return 'Critical'
-            elif recall_class == 'Class II':
-                return 'High'
-            else:
-                return 'Medium'
+        if not flagged_items:
+            return {
+                "status": "success",
+                "timestamp": pd.Timestamp.now().isoformat(),
+                "summary": {
+                    "total_items_checked": 0,
+                    "items_requiring_attention": 0,
+                    "recall_items": 0,
+                    "shortage_items": 0,
+                    "discontinuation_items": 0,
+                    "low_stock_items": 0,
+                    "alert_breakdown": {},
+                    "critical_items": 0
+                },
+                "recalls": [],
+                "other_alerts": []
+            }
         
-        # Shortage items
-        elif status == 'Currently in Shortage':
-            if days_supply <= 3:
-                return 'Critical'
-            elif days_supply <= 7:
-                return 'High'
-            elif days_supply <= 14:
-                return 'Medium'
-            else:
-                return 'Low'
+        # Separate recalls from other alerts
+        recalls = []
+        other_alerts = []
         
-        # Discontinued items
-        elif status == 'Discontinuation':
-            if days_supply <= 7:
-                return 'High'
-            elif days_supply <= 30:
-                return 'Medium'
+        for item in flagged_items:
+            # Check if item is a recall (status contains 'Recalled')
+            if 'Recalled' in item.get('flag_status', ''):
+                recalls.append(item)
             else:
-                return 'Low'
+                other_alerts.append(item)
         
-        # Default
-        return 'Low'
+        # Calculate summary statistics
+        alert_counts = {}
+        recall_count = len(recalls)
+        shortage_count = len([item for item in other_alerts if 'Shortage' in item.get('flag_status', '')])
+        discontinuation_count = len([item for item in other_alerts if 'Discontinuation' in item.get('flag_status', '')])
+        low_stock_count = len([item for item in other_alerts if 'Low Stock' in item.get('flag_status', '')])
+        
+        for item in flagged_items:
+            alert_level = item['alert_level']
+            alert_counts[alert_level] = alert_counts.get(alert_level, 0) + 1
+        
+        critical_items = len([item for item in flagged_items if item['alert_level'] in ['RED', 'PURPLE']])
+        
+        # Sort function for both arrays
+        alert_priority = {'RED': 4, 'PURPLE': 3, 'YELLOW': 2, 'BLUE': 1}
+        
+        def sort_items(items):
+            return sorted(items, key=lambda x: (
+                alert_priority.get(x['alert_level'], 0), 
+                -x['days_of_supply']
+            ), reverse=True)
+        
+        # Sort both arrays
+        sorted_recalls = sort_items(recalls)
+        sorted_other_alerts = sort_items(other_alerts)
+        
+        # Format items for response
+        def format_item(item, idx):
+            return {
+                "id": idx + 1,
+                "drug_name": item['drug_name'],
+                "alert_level": item['alert_level'],
+                "days_of_supply": round(item['days_of_supply'], 1),
+                "current_stock": item['current_stock'],
+                "average_daily_dispense": item['average_daily_dispense'],
+                "fda_status": item['flag_status'],
+                "fda_matched_name": item['fda_matched_name'],
+                "match_confidence": round(item['match_confidence'], 1) if item['match_confidence'] > 0 else None,
+                "recall_classification": item['recall_classification'] if item['recall_classification'] else None,
+                "recall_reason": item['recall_reason'] if item['recall_reason'] else None,
+                "requires_immediate_action": item['requires_immediate_action'],
+                "has_fda_issue": item['has_fda_issue']
+            }
+        
+        return {
+            "status": "success",
+            "timestamp": pd.Timestamp.now().isoformat(),
+            "summary": {
+                "total_items_checked": len(flagged_items),  # This would be total inventory in real API
+                "items_requiring_attention": len(flagged_items),
+                "recall_items": recall_count,
+                "shortage_items": shortage_count,
+                "discontinuation_items": discontinuation_count,
+                "low_stock_items": low_stock_count,
+                "alert_breakdown": alert_counts,
+                "critical_items": critical_items,
+                "avg_days_supply": sum(item['days_of_supply'] for item in flagged_items) / len(flagged_items)
+            },
+            "recalls": [
+                format_item(item, idx) for idx, item in enumerate(sorted_recalls)
+            ],
+            "other_alerts": [
+                format_item(item, idx) for idx, item in enumerate(sorted_other_alerts)
+            ]
+        }
     
     def get_summary_stats(self, flagged_df: pd.DataFrame) -> Dict:
         """
@@ -714,7 +600,7 @@ if __name__ == "__main__":
     except ImportError:
         print("python-dotenv not installed, trying to use system env vars")
     
-    # Use the correct environment variable names (with VITE_ prefix)
+    # Get credentials from environment variables
     import os
     supabase_url = os.getenv('VITE_SUPABASE_URL') or os.getenv('SUPABASE_URL')
     supabase_key = os.getenv('VITE_SUPABASE_ANON_KEY') or os.getenv('SUPABASE_KEY')
@@ -726,10 +612,10 @@ if __name__ == "__main__":
     import logging
     logging.basicConfig(level=logging.INFO)
     
-    # Initialize checker
+    # Initialize checker without FDA API key (uses public rate limits)
     checker = InventoryChecker()
     
-    # Initialize Supabase using the correct credentials
+    # Initialize Supabase using environment variables
     if checker.initialize_supabase(url=supabase_url, key=supabase_key):
         print("Supabase connection successful!")
         
