@@ -93,13 +93,7 @@ const InventoryScanTable = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          drug_name: drugItem.drug_name,
-          alert_level: drugItem.alert_level,
-          status: drugItem.status,
-          stock: drugItem.stock,
-          days_supply: drugItem.days_supply,
-          reason: drugItem.reason || '',
-          classification: drugItem.classification || ''
+          drug_name: drugItem.drug_name
         })
       })
 
@@ -108,16 +102,19 @@ const InventoryScanTable = () => {
       }
 
       const data = await response.json()
-      setAiRecommendations(data.recommendations)
+      setAiRecommendations(data)
       
     } catch (error) {
       console.error('AI recommendations error:', error)
       toast.error('Failed to get AI recommendations: ' + error.message)
       setAiRecommendations({
-        immediate_actions: ['Unable to load AI recommendations. Please try again.'],
-        risk_assessment: 'Error loading assessment',
-        alternatives: [],
-        timeline: 'Unknown'
+        alt1: null,
+        d1: 'Unable to load AI recommendations. Please try again.',
+        alt2: null,
+        d2: null,
+        alt3: null,
+        d3: null,
+        email: 'Please contact support for assistance.'
       })
     } finally {
       setLoadingAI(false)
@@ -594,7 +591,7 @@ const InventoryScanTable = () => {
                   onClick={() => handleSort('drug_name')}
                   style={{
                     padding: '0.75rem 1rem',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: '600',
                     color: '#374151',
@@ -604,7 +601,7 @@ const InventoryScanTable = () => {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
                     Drug Name
                     {getSortIcon('drug_name') && React.createElement(getSortIcon('drug_name'), { 
                       style: { width: '0.75rem', height: '0.75rem' } 
@@ -615,7 +612,7 @@ const InventoryScanTable = () => {
                   onClick={() => handleSort('current_stock')}
                   style={{
                     padding: '0.75rem 1rem',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: '600',
                     color: '#374151',
@@ -625,7 +622,7 @@ const InventoryScanTable = () => {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
                     Current Stock
                     {getSortIcon('current_stock') && React.createElement(getSortIcon('current_stock'), { 
                       style: { width: '0.75rem', height: '0.75rem' } 
@@ -636,7 +633,7 @@ const InventoryScanTable = () => {
                   onClick={() => handleSort('average_daily_dispense')}
                   style={{
                     padding: '0.75rem 1rem',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: '600',
                     color: '#374151',
@@ -646,7 +643,7 @@ const InventoryScanTable = () => {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
                     Daily Usage
                     {getSortIcon('average_daily_dispense') && React.createElement(getSortIcon('average_daily_dispense'), { 
                       style: { width: '0.75rem', height: '0.75rem' } 
@@ -657,7 +654,7 @@ const InventoryScanTable = () => {
                   onClick={() => handleSort('days_of_supply')}
                   style={{
                     padding: '0.75rem 1rem',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: '600',
                     color: '#374151',
@@ -667,7 +664,7 @@ const InventoryScanTable = () => {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
                     Days Supply
                     {getSortIcon('days_of_supply') && React.createElement(getSortIcon('days_of_supply'), { 
                       style: { width: '0.75rem', height: '0.75rem' } 
@@ -676,7 +673,7 @@ const InventoryScanTable = () => {
                 </th>
                 <th style={{
                   padding: '0.75rem 1rem',
-                  textAlign: 'left',
+                  textAlign: 'center',
                   fontSize: '0.75rem',
                   fontWeight: '600',
                   color: '#374151',
@@ -684,17 +681,6 @@ const InventoryScanTable = () => {
                   letterSpacing: '0.05em'
                 }}>
                   FDA Status
-                </th>
-                <th style={{
-                  padding: '0.75rem 1rem',
-                  textAlign: 'left',
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}>
-                  Details
                 </th>
                 <th style={{
                   padding: '0.75rem 1rem',
@@ -723,12 +709,14 @@ const InventoryScanTable = () => {
                   >
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.5rem',
+                        justifyContent: 'center'
                       }}>
                         <StatusIcon 
                           style={{ 
@@ -749,7 +737,8 @@ const InventoryScanTable = () => {
                     <td style={{
                       padding: '1rem',
                       verticalAlign: 'middle',
-                      maxWidth: '300px'
+                      maxWidth: '300px',
+                      textAlign: 'center'
                     }}>
                       <p style={{
                         margin: 0,
@@ -779,7 +768,8 @@ const InventoryScanTable = () => {
                     </td>
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <span style={{
                         fontSize: '0.875rem',
@@ -791,7 +781,8 @@ const InventoryScanTable = () => {
                     </td>
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <span style={{
                         fontSize: '0.875rem',
@@ -802,7 +793,8 @@ const InventoryScanTable = () => {
                     </td>
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <span style={{
                         fontSize: '0.875rem',
@@ -814,7 +806,8 @@ const InventoryScanTable = () => {
                     </td>
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <span style={{
                         fontSize: '0.75rem',
@@ -826,35 +819,6 @@ const InventoryScanTable = () => {
                       }}>
                         {item.fda_status}
                       </span>
-                    </td>
-                    <td style={{
-                      padding: '1rem',
-                      verticalAlign: 'middle',
-                      maxWidth: '200px'
-                    }}>
-                      {item.recall_reason && (
-                        <>
-                          <div style={{
-                            fontSize: '0.75rem',
-                            color: '#dc2626',
-                            fontWeight: '500',
-                            marginBottom: '0.25rem'
-                          }}>
-                            {item.recall_classification}
-                          </div>
-                          <div style={{
-                            fontSize: '0.75rem',
-                            color: '#374151',
-                            lineHeight: 1.3,
-                            wordBreak: 'break-word'
-                          }}>
-                            {item.recall_reason.length > 100 
-                              ? `${item.recall_reason.substring(0, 100)}...`
-                              : item.recall_reason
-                            }
-                          </div>
-                        </>
-                      )}
                     </td>
                     <td style={{
                       padding: '1rem',
@@ -1298,8 +1262,8 @@ const InventoryScanTable = () => {
 
                   {/* AI Recommendation Section */}
                   <div style={{
-                    backgroundColor: '#fef2f2',
-                    border: '1px solid #fecaca',
+                    backgroundColor: '#f0f9ff',
+                    border: '1px solid #0ea5e9',
                     borderRadius: '12px',
                     padding: '1.25rem'
                   }}>
@@ -1307,58 +1271,146 @@ const InventoryScanTable = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
-                      marginBottom: '1rem'
+                      marginBottom: '1.5rem'
                     }}>
-                      <Lightbulb style={{ width: '1.125rem', height: '1.125rem', color: '#dc2626' }} />
+                      <Lightbulb style={{ width: '1.125rem', height: '1.125rem', color: '#0369a1' }} />
                       <h3 style={{
                         margin: 0,
                         fontSize: '1.125rem',
                         fontWeight: '600',
-                        color: '#dc2626'
+                        color: '#0369a1'
                       }}>
-                        AI Recommendation
+                        AI Recommendations
                       </h3>
                     </div>
 
-                    {aiRecommendations.alternatives && aiRecommendations.alternatives.length > 0 && (
-                      <div style={{ marginBottom: '1rem' }}>
+                    {/* Alternative Medications */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {aiRecommendations.alt1 && (
+                        <div style={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e0f2fe',
+                          borderRadius: '8px',
+                          padding: '1rem'
+                        }}>
+                          <h4 style={{
+                            margin: '0 0 0.5rem 0',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#1e293b'
+                          }}>
+                            Alternative 1: {aiRecommendations.alt1}
+                          </h4>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: '#475569',
+                            lineHeight: 1.5
+                          }}>
+                            {aiRecommendations.d1}
+                          </p>
+                        </div>
+                      )}
+
+                      {aiRecommendations.alt2 && (
+                        <div style={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e0f2fe',
+                          borderRadius: '8px',
+                          padding: '1rem'
+                        }}>
+                          <h4 style={{
+                            margin: '0 0 0.5rem 0',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#1e293b'
+                          }}>
+                            Alternative 2: {aiRecommendations.alt2}
+                          </h4>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: '#475569',
+                            lineHeight: 1.5
+                          }}>
+                            {aiRecommendations.d2}
+                          </p>
+                        </div>
+                      )}
+
+                      {aiRecommendations.alt3 && (
+                        <div style={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e0f2fe',
+                          borderRadius: '8px',
+                          padding: '1rem'
+                        }}>
+                          <h4 style={{
+                            margin: '0 0 0.5rem 0',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#1e293b'
+                          }}>
+                            Alternative 3: {aiRecommendations.alt3}
+                          </h4>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: '#475569',
+                            lineHeight: 1.5
+                          }}>
+                            {aiRecommendations.d3}
+                          </p>
+                        </div>
+                      )}
+
+                      {!aiRecommendations.alt1 && !aiRecommendations.alt2 && !aiRecommendations.alt3 && (
+                        <div style={{
+                          backgroundColor: '#fef3c7',
+                          border: '1px solid #fbbf24',
+                          borderRadius: '8px',
+                          padding: '1rem',
+                          textAlign: 'center'
+                        }}>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: '#92400e',
+                            fontWeight: '500'
+                          }}>
+                            No alternative medications currently available.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Contact Information */}
+                    {aiRecommendations.email && (
+                      <div style={{
+                        marginTop: '1.5rem',
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '1rem'
+                      }}>
                         <h4 style={{
                           margin: '0 0 0.5rem 0',
                           fontSize: '0.875rem',
                           fontWeight: '600',
-                          color: '#dc2626'
+                          color: '#334155'
                         }}>
-                          Suggested Alternative:
+                          Contact Information:
                         </h4>
                         <p style={{
-                          margin: '0 0 0.75rem 0',
-                          fontSize: '1rem',
-                          fontWeight: '600',
-                          color: '#1e293b'
+                          margin: 0,
+                          fontSize: '0.875rem',
+                          color: '#475569',
+                          lineHeight: 1.5
                         }}>
-                          {aiRecommendations.alternatives[0]}
+                          {aiRecommendations.email}
                         </p>
                       </div>
                     )}
-
-                    <div>
-                      <h4 style={{
-                        margin: '0 0 0.5rem 0',
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
-                        color: '#dc2626'
-                      }}>
-                        Justification:
-                      </h4>
-                      <p style={{
-                        margin: 0,
-                        fontSize: '0.875rem',
-                        color: '#dc2626',
-                        lineHeight: 1.5
-                      }}>
-                        {aiRecommendations.risk_assessment}
-                      </p>
-                    </div>
                   </div>
                 </div>
               ) : (

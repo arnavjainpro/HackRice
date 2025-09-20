@@ -32,12 +32,6 @@ ai_engine = AIRecommendationEngine()
 # Pydantic models
 class AIRecommendationRequest(BaseModel):
     drug_name: str
-    alert_level: str
-    status: Optional[str] = ''
-    stock: Optional[int] = 0
-    days_supply: Optional[float] = 0
-    reason: Optional[str] = ''
-    classification: Optional[str] = ''
 
 
 def _combine_fda(shortage_df: pd.DataFrame, recall_df: pd.DataFrame) -> pd.DataFrame:
@@ -143,24 +137,35 @@ def run_inventory_check():
 async def get_ai_recommendations(request: AIRecommendationRequest):
     """
     Generate AI-powered recommendations for flagged medications
+    Returns a simplified response with alternative medications and descriptions
     """
     try:
         logger.info(f"Generating AI recommendations for: {request.drug_name}")
         
-        recommendations = ai_engine.generate_recommendations(
-            drug_name=request.drug_name,
-            alert_level=request.alert_level,
-            status=request.status,
-            stock=request.stock,
-            days_supply=request.days_supply,
-            reason=request.reason,
-            classification=request.classification
-        )
+        # Mock response for now - replace with actual AI logic later
+        mock_response = {
+            "alt1": "Lisinopril 5mg",
+            "d1": "Lower dose alternative with similar efficacy. Monitor blood pressure closely during transition.",
+            "alt2": "Enalapril 10mg", 
+            "d2": "ACE inhibitor with similar mechanism of action. May have fewer side effects for some patients.",
+            "alt3": "Losartan 50mg",
+            "d3": "ARB alternative that works differently but achieves similar blood pressure control.",
+            "email": "Contact your prescribing physician at physician@hospital.com for medication adjustment guidance."
+        }
         
-        return JSONResponse(content={
-            "status": "success",
-            "recommendations": recommendations
-        })
+        # For some drugs, simulate no alternatives available
+        if "unavailable" in request.drug_name.lower():
+            mock_response = {
+                "alt1": None,
+                "d1": None,
+                "alt2": None,
+                "d2": None,
+                "alt3": None,
+                "d3": None,
+                "email": "No alternative medications currently available. Contact emergency supplier at emergency@pharmacy.com"
+            }
+        
+        return JSONResponse(content=mock_response)
         
     except Exception as e:
         logger.exception(f"Failed to generate AI recommendations for {request.drug_name}")
