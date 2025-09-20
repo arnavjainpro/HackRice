@@ -19,6 +19,7 @@ from api.supabase_retriever import SupabaseRetriever
 from api.webscraper import scrape_fda_shortages_as_dataframe
 from api.recall import FDARecallRetriever
 from api.inventory_checker import InventoryChecker
+from api.aiResponses import generate_recommendation  # <-- NEW
 
 logger = logging.getLogger("uvicorn")
 app = FastAPI(title="RxBridge Backend", version="1.0.0")
@@ -60,6 +61,14 @@ def _combine_fda(shortage_df: pd.DataFrame, recall_df: pd.DataFrame) -> pd.DataF
     fda_df = fda_df.drop_duplicates(subset=["fda_drug_name"], keep="first").drop(columns=["priority"])
     return fda_df
 
+# in main.py (top-level with other imports)
+# import os
+
+# @app.get("/health/ai")
+# def health_ai():
+#     has_key = bool(os.getenv("GOOGLE_API_KEY"))
+#     return {"ai_enabled": has_key}
+
 
 @app.post("/inventory/run")
 def run_inventory_check():
@@ -69,7 +78,8 @@ def run_inventory_check():
     - Scrape FDA shortages
     - Fetch FDA recalls (API)
     - Match & compute alerts via InventoryChecker
-    - Return the same JSON structure (`summary`, `recalls`, `other_alerts`)
+    - Enrich each item with Gemini AI recommendations
+    - Return the JSON structure (`summary`, `recalls`, `other_alerts`)
     """
 
     # ---- 1) Inventory (Supabase) ----
@@ -81,7 +91,8 @@ def run_inventory_check():
 
     try:
         supa = SupabaseRetriever(url=supabase_url, key=supabase_key)
-        inventory_df = supa.get_pharmacy_inventory()  # standardized columns: drug_name, stock, average_daily_dispense, days_of_supply
+        # standardized columns after retriever rename: drug_name, stock, average_daily_dispense, days_of_supply
+        inventory_df = supa.get_pharmacy_inventory()
     except Exception as e:
         logger.exception("Failed to fetch inventory from Supabase")
         raise HTTPException(status_code=502, detail=f"Failed to fetch inventory: {e}")
@@ -98,9 +109,9 @@ def run_inventory_check():
 
     # ---- 3) FDA Recalls (API) ----
     try:
-        fda_api_key = os.getenv("FDA_API_KEY")  # optional, fine if None
+        fda_api_key = os.getenv("FDA_API_KEY")  # optional
         recall_client = FDARecallRetriever(api_key=fda_api_key)
-        recall_df = recall_client.get_all_recalls_df(limit=500)  # already cleaned/sorted in module
+        recall_df = recall_client.get_all_recalls_df(limit=500)  # cleaned/sorted in module
     except Exception as e:
         logger.exception("Failed to fetch FDA recalls")
         raise HTTPException(status_code=502, detail=f"Failed to fetch FDA recalls: {e}")
@@ -108,7 +119,7 @@ def run_inventory_check():
     # ---- 4) Combine FDA datasets ----
     fda_df = _combine_fda(shortage_df, recall_df)
 
-    # ---- 5) Evaluate ----
+    # ---- 5) Evaluate (matching/alerts) ----
     try:
         checker = InventoryChecker()
         api_json, _ = checker.evaluate(inventory_df=inventory_df, fda_df=fda_df, return_df=False)
@@ -116,8 +127,24 @@ def run_inventory_check():
         logger.exception("Inventory evaluation failed")
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {e}")
 
-    # If evaluate returned an error JSON, surface it properly
     if isinstance(api_json, dict) and api_json.get("status") == "error":
         raise HTTPException(status_code=500, detail=api_json.get("message", "Unknown error"))
 
+    # ---- 6) Enrich with AI recommendations (best-effort; non-fatal) ----
+    def _attach_ai(items: list):
+        for item in items:
+            item["ai_recommendation"] = generate_recommendation(
+                drug_name=item.get("drug_name", ""),
+                alert_level=item.get("alert_level", ""),
+                fda_status=item.get("fda_status", ""),
+                recall_classification=item.get("recall_classification"),
+                recall_reason=item.get("recall_reason"),
+                days_of_supply=item.get("days_of_supply"),
+                avg_daily_dispense=item.get("average_daily_dispense"),
+            )
+
+    _attach_ai(api_json.get("recalls", []))
+    _attach_ai(api_json.get("other_alerts", []))
+
+    # ---- 7) Return ----
     return JSONResponse(content=api_json)
