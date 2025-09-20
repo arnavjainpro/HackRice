@@ -1,22 +1,74 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, Filter, Package, TrendingDown, AlertTriangle, ChevronUp, ChevronDown, Info, X, RefreshCw, ShieldAlert, Scan, Clock, Brain, Lightbulb, Zap, Mail, Send, User, Phone, MessageSquare } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const InventoryScanTable = () => {
-  const [scanData, setScanData] = useState(null)
+  // Load initial scan data from localStorage
+  const [scanData, setScanData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rxbridge_scan_data')
+      return saved ? JSON.parse(saved) : null
+    } catch (error) {
+      console.error('Error loading scan data from localStorage:', error)
+      return null
+    }
+  })
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [filterConfig, setFilterConfig] = useState('all') // all, red, purple, yellow, blue
   const [loading, setLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
   const [showLegend, setShowLegend] = useState(false)
-  const [lastScanTime, setLastScanTime] = useState(null)
+  
+  // Load last scan time from localStorage
+  const [lastScanTime, setLastScanTime] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rxbridge_last_scan_time')
+      return saved ? new Date(saved) : null
+    } catch (error) {
+      console.error('Error loading last scan time from localStorage:', error)
+      return null
+    }
+  })
   
   // AI Recommendations Modal
   const [showAIModal, setShowAIModal] = useState(false)
   const [selectedDrug, setSelectedDrug] = useState(null)
   const [aiRecommendations, setAiRecommendations] = useState(null)
   const [loadingAI, setLoadingAI] = useState(false)
+  
+  // Track if current data is from cache vs fresh scan
+  const [isDataFromCache, setIsDataFromCache] = useState(false)
+
+  // Persist scan data to localStorage whenever it changes
+  useEffect(() => {
+    if (scanData) {
+      try {
+        localStorage.setItem('rxbridge_scan_data', JSON.stringify(scanData))
+      } catch (error) {
+        console.error('Error saving scan data to localStorage:', error)
+      }
+    }
+  }, [scanData])
+
+  // Persist last scan time to localStorage whenever it changes  
+  useEffect(() => {
+    if (lastScanTime) {
+      try {
+        localStorage.setItem('rxbridge_last_scan_time', lastScanTime.toISOString())
+      } catch (error) {
+        console.error('Error saving last scan time to localStorage:', error)
+      }
+    }
+  }, [lastScanTime])
+
+  // Set cache flag on component mount if data exists
+  useEffect(() => {
+    if (scanData && lastScanTime) {
+      setIsDataFromCache(true)
+    }
+  }, [])
 
   // Call the backend POST endpoint
   const performInventoryScan = async () => {
@@ -66,6 +118,7 @@ const InventoryScanTable = () => {
       if (data.status === 'success') {
         setScanData(data)
         setLastScanTime(new Date())
+        setIsDataFromCache(false) // Mark as fresh data
         setLoadingMessage('Scan completed successfully!')
         toast.success(`✅ Scan completed! Found ${data.summary.items_requiring_attention} items needing attention`)
       } else {
@@ -77,6 +130,21 @@ const InventoryScanTable = () => {
     } finally {
       setLoading(false)
       setLoadingMessage('')
+    }
+  }
+
+  // Clear cached scan data
+  const clearScanData = () => {
+    try {
+      localStorage.removeItem('rxbridge_scan_data')
+      localStorage.removeItem('rxbridge_last_scan_time')
+      setScanData(null)
+      setLastScanTime(null)
+      setIsDataFromCache(false)
+      toast.success('🗑️ Scan data cleared successfully')
+    } catch (error) {
+      console.error('Error clearing scan data:', error)
+      toast.error('Failed to clear scan data')
     }
   }
 
@@ -306,22 +374,71 @@ const InventoryScanTable = () => {
                 Last scan: {lastScanTime.toLocaleTimeString()}
               </div>
             )}
+            
+            {scanData && isDataFromCache && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                fontSize: '0.625rem',
+                color: '#059669',
+                backgroundColor: '#ecfdf5',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '4px',
+                border: '1px solid #a7f3d0'
+              }}>
+                <Package style={{ width: '0.625rem', height: '0.625rem' }} />
+                Data loaded from cache
+              </div>
+            )}
           </div>
           
-          <button
-            onClick={performInventoryScan}
-            disabled={loading}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.5rem',
-              backgroundColor: loading ? '#9ca3af' : '#dc2626',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.875rem',
-              fontWeight: '500',
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {scanData && (
+              <button
+                onClick={clearScanData}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.375rem',
+                  padding: '0.75rem 1rem',
+                  backgroundColor: '#6b7280',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.75rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#4b5563'
+                  e.target.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#6b7280'
+                  e.target.style.transform = 'translateY(0)'
+                }}
+              >
+                <X style={{ width: '0.875rem', height: '0.875rem' }} />
+                Clear Data
+              </button>
+            )}
+            
+            <button
+              onClick={performInventoryScan}
+              disabled={loading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.5rem',
+                backgroundColor: loading ? '#9ca3af' : '#dc2626',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                fontWeight: '500',
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s ease'
             }}
@@ -348,6 +465,7 @@ const InventoryScanTable = () => {
               </>
             )}
           </button>
+          </div>
 
           {/* Loading message */}
           {loading && loadingMessage && (
