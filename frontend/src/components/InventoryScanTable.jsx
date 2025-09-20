@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, Filter, Package, TrendingDown, AlertTriangle, ChevronUp, ChevronDown, Info, X, RefreshCw, ShieldAlert, Scan, Clock } from 'lucide-react'
+import { Search, Filter, Package, TrendingDown, AlertTriangle, ChevronUp, ChevronDown, Info, X, RefreshCw, ShieldAlert, Scan, Clock, Brain, Lightbulb, Zap, Mail, Send, User, Phone, MessageSquare } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const InventoryScanTable = () => {
@@ -11,6 +11,12 @@ const InventoryScanTable = () => {
   const [loadingMessage, setLoadingMessage] = useState('')
   const [showLegend, setShowLegend] = useState(false)
   const [lastScanTime, setLastScanTime] = useState(null)
+  
+  // AI Recommendations Modal
+  const [showAIModal, setShowAIModal] = useState(false)
+  const [selectedDrug, setSelectedDrug] = useState(null)
+  const [aiRecommendations, setAiRecommendations] = useState(null)
+  const [loadingAI, setLoadingAI] = useState(false)
 
   // Call the backend POST endpoint
   const performInventoryScan = async () => {
@@ -74,11 +80,56 @@ const InventoryScanTable = () => {
     }
   }
 
-  // Handle escape key to close modal
+  // Fetch AI recommendations for a specific drug
+  const fetchAIRecommendations = async (drugItem) => {
+    setLoadingAI(true)
+    setSelectedDrug(drugItem)
+    setShowAIModal(true)
+    
+    try {
+      const response = await fetch('/ai-recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          drug_name: drugItem.drug_name,
+          alert_level: drugItem.alert_level,
+          status: drugItem.status,
+          stock: drugItem.stock,
+          days_supply: drugItem.days_supply,
+          reason: drugItem.reason || '',
+          classification: drugItem.classification || ''
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setAiRecommendations(data.recommendations)
+      
+    } catch (error) {
+      console.error('AI recommendations error:', error)
+      toast.error('Failed to get AI recommendations: ' + error.message)
+      setAiRecommendations({
+        immediate_actions: ['Unable to load AI recommendations. Please try again.'],
+        risk_assessment: 'Error loading assessment',
+        alternatives: [],
+        timeline: 'Unknown'
+      })
+    } finally {
+      setLoadingAI(false)
+    }
+  }
+
+  // Handle escape key to close modals
   React.useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
         setShowLegend(false)
+        setShowAIModal(false)
       }
     }
 
@@ -645,6 +696,17 @@ const InventoryScanTable = () => {
                 }}>
                   Details
                 </th>
+                <th style={{
+                  padding: '0.75rem 1rem',
+                  textAlign: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
+                  AI Recommendations
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -792,6 +854,42 @@ const InventoryScanTable = () => {
                             }
                           </div>
                         </>
+                      )}
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
+                    }}>
+                      {item.alert_level !== 'BLUE' && (
+                        <button
+                          onClick={() => fetchAIRecommendations(item)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.375rem',
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: '#3b82f6',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = '#2563eb'
+                            e.target.style.transform = 'translateY(-1px)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = '#3b82f6'
+                            e.target.style.transform = 'translateY(0)'
+                          }}
+                        >
+                          <Brain style={{ width: '0.875rem', height: '0.875rem' }} />
+                          Get AI Help
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -1033,6 +1131,316 @@ const InventoryScanTable = () => {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Recommendations Modal */}
+      {showAIModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            maxWidth: '700px',
+            width: '100%',
+            maxHeight: '85vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '2rem 2rem 1rem 2rem',
+              borderBottom: '1px solid #f1f5f9',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ flex: 1 }}>
+                <h1 style={{
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: '#1e293b',
+                  letterSpacing: '-0.025em'
+                }}>
+                  AI Recommendation for {selectedDrug?.drug_name}
+                </h1>
+                <button
+                  onClick={() => setShowAIModal(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    right: '1.5rem',
+                    padding: '0.5rem',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#64748b',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f1f5f9'
+                    e.target.style.color = '#334155'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent'
+                    e.target.style.color = '#64748b'
+                  }}
+                >
+                  <X style={{ width: '1.25rem', height: '1.25rem' }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '1.5rem 2rem 2rem 2rem'
+            }}>
+              {loadingAI ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '3rem 1rem',
+                  textAlign: 'center'
+                }}>
+                  <RefreshCw style={{ 
+                    width: '2.5rem', 
+                    height: '2.5rem', 
+                    color: '#3b82f6',
+                    animation: 'spin 1s linear infinite',
+                    marginBottom: '1rem'
+                  }} />
+                  <h3 style={{ margin: '0 0 0.5rem 0', color: '#1e293b', fontWeight: '600' }}>
+                    Generating AI Recommendations
+                  </h3>
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '0.875rem' }}>
+                    Analyzing drug data and compliance requirements...
+                  </p>
+                </div>
+              ) : aiRecommendations ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  
+                  {/* Current Alert Section */}
+                  <div style={{
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    padding: '1.25rem'
+                  }}>
+                    <h3 style={{
+                      margin: '0 0 1rem 0',
+                      fontSize: '1.125rem',
+                      fontWeight: '600',
+                      color: '#334155'
+                    }}>
+                      Current Alert
+                    </h3>
+                    
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '0.75rem'
+                    }}>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#64748b'
+                      }}>
+                        Severity:
+                      </span>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: selectedDrug?.alert_level === 'RED' ? '#dc2626' : 
+                               selectedDrug?.alert_level === 'PURPLE' ? '#7c3aed' :
+                               selectedDrug?.alert_level === 'YELLOW' ? '#d97706' : '#0891b2',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        {selectedDrug?.alert_level === 'RED' ? 'CRITICAL' : 
+                         selectedDrug?.alert_level === 'PURPLE' ? 'RECALLED' :
+                         selectedDrug?.alert_level === 'YELLOW' ? 'SHORTAGE' : 'AWARENESS'}
+                      </span>
+                    </div>
+                    
+                    <p style={{
+                      margin: 0,
+                      fontSize: '0.875rem',
+                      color: '#475569',
+                      lineHeight: 1.5
+                    }}>
+                      {selectedDrug?.alert_level === 'RED' ? 'Critical shortage - Immediate action required' :
+                       selectedDrug?.alert_level === 'PURPLE' ? 'Product recalled - Stop dispensing immediately' :
+                       selectedDrug?.alert_level === 'YELLOW' ? 'Supply shortage detected - Monitor closely' :
+                       `Low stock warning - ${selectedDrug?.days_of_supply || 0} days of supply remaining`}
+                    </p>
+                  </div>
+
+                  {/* AI Recommendation Section */}
+                  <div style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '12px',
+                    padding: '1.25rem'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginBottom: '1rem'
+                    }}>
+                      <Lightbulb style={{ width: '1.125rem', height: '1.125rem', color: '#dc2626' }} />
+                      <h3 style={{
+                        margin: 0,
+                        fontSize: '1.125rem',
+                        fontWeight: '600',
+                        color: '#dc2626'
+                      }}>
+                        AI Recommendation
+                      </h3>
+                    </div>
+
+                    {aiRecommendations.alternatives && aiRecommendations.alternatives.length > 0 && (
+                      <div style={{ marginBottom: '1rem' }}>
+                        <h4 style={{
+                          margin: '0 0 0.5rem 0',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: '#dc2626'
+                        }}>
+                          Suggested Alternative:
+                        </h4>
+                        <p style={{
+                          margin: '0 0 0.75rem 0',
+                          fontSize: '1rem',
+                          fontWeight: '600',
+                          color: '#1e293b'
+                        }}>
+                          {aiRecommendations.alternatives[0]}
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <h4 style={{
+                        margin: '0 0 0.5rem 0',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#dc2626'
+                      }}>
+                        Justification:
+                      </h4>
+                      <p style={{
+                        margin: 0,
+                        fontSize: '0.875rem',
+                        color: '#dc2626',
+                        lineHeight: 1.5
+                      }}>
+                        {aiRecommendations.risk_assessment}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#64748b'
+                }}>
+                  <AlertTriangle style={{ width: '2rem', height: '2rem', marginBottom: '1rem' }} />
+                  <p style={{ margin: 0, fontSize: '0.875rem' }}>
+                    Failed to load AI recommendations. Please try again.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer with Action Buttons */}
+            {!loadingAI && aiRecommendations && (
+              <div style={{
+                padding: '1.5rem 2rem',
+                borderTop: '1px solid #f1f5f9',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '1rem'
+              }}>
+                <button
+                  onClick={() => setShowAIModal(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#f8fafc',
+                    color: '#64748b',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f1f5f9'
+                    e.target.style.borderColor = '#cbd5e1'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#f8fafc'
+                    e.target.style.borderColor = '#e2e8f0'
+                  }}
+                >
+                  Close
+                </button>
+
+                <button
+                  onClick={() => {
+                    toast.success('Email communication feature coming soon!')
+                    // TODO: Implement email functionality
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#b91c1c'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#dc2626'}
+                >
+                  <Send style={{ width: '1rem', height: '1rem' }} />
+                  Generate Communication
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -4,6 +4,8 @@ import os
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import Optional
 
 # Optional: load .env if present (safe no-op if not installed)
 try:
@@ -19,9 +21,23 @@ from api.supabase_retriever import SupabaseRetriever
 from api.webscraper import scrape_fda_shortages_as_dataframe
 from api.recall import FDARecallRetriever
 from api.inventory_checker import InventoryChecker
+from api.aiResponses import AIRecommendationEngine
 
 logger = logging.getLogger("uvicorn")
 app = FastAPI(title="RxBridge Backend", version="1.0.0")
+
+# Initialize AI recommendation engine
+ai_engine = AIRecommendationEngine()
+
+# Pydantic models
+class AIRecommendationRequest(BaseModel):
+    drug_name: str
+    alert_level: str
+    status: Optional[str] = ''
+    stock: Optional[int] = 0
+    days_supply: Optional[float] = 0
+    reason: Optional[str] = ''
+    classification: Optional[str] = ''
 
 
 def _combine_fda(shortage_df: pd.DataFrame, recall_df: pd.DataFrame) -> pd.DataFrame:
@@ -121,3 +137,34 @@ def run_inventory_check():
         raise HTTPException(status_code=500, detail=api_json.get("message", "Unknown error"))
 
     return JSONResponse(content=api_json)
+
+
+@app.post("/ai-recommendations")
+async def get_ai_recommendations(request: AIRecommendationRequest):
+    """
+    Generate AI-powered recommendations for flagged medications
+    """
+    try:
+        logger.info(f"Generating AI recommendations for: {request.drug_name}")
+        
+        recommendations = ai_engine.generate_recommendations(
+            drug_name=request.drug_name,
+            alert_level=request.alert_level,
+            status=request.status,
+            stock=request.stock,
+            days_supply=request.days_supply,
+            reason=request.reason,
+            classification=request.classification
+        )
+        
+        return JSONResponse(content={
+            "status": "success",
+            "recommendations": recommendations
+        })
+        
+    except Exception as e:
+        logger.exception(f"Failed to generate AI recommendations for {request.drug_name}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to generate AI recommendations: {str(e)}"
+        )

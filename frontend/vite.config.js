@@ -8,7 +8,8 @@ export default defineConfig({
     port: 3003,
     proxy: {
       '/inventory': 'http://localhost:8000',
-      '/api': 'http://localhost:8000'
+      '/api': 'http://localhost:8000',
+      '/ai-recommendations': 'http://localhost:8000'
     }
   }
 })
