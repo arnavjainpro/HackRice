@@ -242,41 +242,43 @@ const Dashboard = () => {
           </Alert>
         )}
 
-        <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 400px', gap: '2rem' }}>
+        <div className="dashboard-grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
           {/* Left Column - Inventory Table */}
           <div className="card">
-            <h2 style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              📊 Inventory Overview
-            </h2>
+            <h2 data-icon="📊">Inventory Overview</h2>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className="inventory-table">
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #fecaca' }}>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>Drug Name</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>Stock Level</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>Avg Daily Use</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>Days of Supply</th>
+                  <tr>
+                    <th>Drug Name</th>
+                    <th>Stock Level</th>
+                    <th>Avg Daily Use</th>
+                    <th>Days of Supply</th>
                   </tr>
                 </thead>
                 <tbody>
                   {inventoryList.map((item) => (
-                    <tr key={item.id} style={{ ...getRowStyle(item), borderBottom: '1px solid #f3f4f6' }}>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ color: '#111827', fontWeight: '500' }}>{item.drug_name}</div>
+                    <tr key={item.id} style={getRowStyle(item)}>
+                      <td>
+                        <div className="drug-name">{item.drug_name}</div>
                         {item.hasAlert && (
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                            Alert: {item.alertSeverity.replace('_', ' ').toLowerCase()}
+                          <div className="drug-alert">
+                            Alert: {item.alertSeverity.replace('_', ' ')}
                           </div>
                         )}
                       </td>
-                      <td style={{ padding: '1rem', color: getStockLevelColor(item.days_of_supply), fontWeight: item.days_of_supply <= 10 ? 'bold' : 'normal' }}>
-                        {item.stock_level} units
+                      <td>
+                        <span className={`stock-level ${item.days_of_supply <= 5 ? 'stock-critical' : item.days_of_supply <= 10 ? 'stock-warning' : 'stock-normal'}`}>
+                          {item.stock_level} units
+                        </span>
                       </td>
-                      <td style={{ padding: '1rem', color: '#111827' }}>
+                      <td style={{ color: '#475569', fontWeight: '500' }}>
                         {item.avg_daily_use} units/day
                       </td>
-                      <td style={{ padding: '1rem', color: getStockLevelColor(item.days_of_supply), fontWeight: 'bold' }}>
-                        {item.days_of_supply} days
+                      <td>
+                        <span className={`stock-level ${item.days_of_supply <= 5 ? 'stock-critical' : item.days_of_supply <= 10 ? 'stock-warning' : 'stock-normal'}`}>
+                          {item.days_of_supply} days
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -288,29 +290,21 @@ const Dashboard = () => {
           {/* Right Column - Controls */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Simulation Panel */}
-            <div className="card" style={{ border: '2px dashed #fecaca' }}>
-              <h2 style={{ color: '#dc2626' }}>🎯 Simulation Panel</h2>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+            <div className="card simulation-panel">
+              <h2 data-icon="🎯">Simulation Panel</h2>
+              <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1.5rem', fontWeight: '500' }}>
                 <strong>For Demo Purposes</strong>
               </p>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontSize: '0.875rem', fontWeight: '500' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.75rem', color: '#374151', fontSize: '0.875rem', fontWeight: '600' }}>
                   Select Drug to Simulate Shortage
                 </label>
                 <select
                   value={selectedDrugForSimulation}
                   onChange={(e) => setSelectedDrugForSimulation(e.target.value)}
                   disabled={isSimulationLoading}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    background: '#ffffff',
-                    color: '#111827',
-                    fontSize: '0.875rem'
-                  }}
+                  className="simulation-select"
                 >
                   <option value="">Choose a drug...</option>
                   {inventoryList.map((item) => (
@@ -326,21 +320,21 @@ const Dashboard = () => {
                 onClick={() => handleTriggerShortage(selectedDrugForSimulation)}
                 disabled={!selectedDrugForSimulation || isSimulationLoading}
                 loading={isSimulationLoading}
-                style={{ background: '#ea580c', borderColor: '#ea580c', color: '#ffffff' }}
+                className="simulation-button"
               >
-                <Activity style={{ width: '1rem', height: '1rem' }} />
+                <Activity style={{ width: '1.25rem', height: '1.25rem' }} />
                 Trigger Shortage Event
               </Button>
             </div>
 
             {/* Alert Feed */}
             <div className="card">
-              <h2 style={{ color: '#dc2626' }}>🚨 Alert Feed ({alerts.length})</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <h2 data-icon="🚨">Alert Feed ({alerts.length})</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                 {alerts.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '2rem' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✅</div>
-                    <p style={{ color: '#6b7280' }}>No new alerts. All systems normal.</p>
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+                    <p style={{ color: '#64748b', fontSize: '1rem', fontWeight: '500' }}>No new alerts. All systems normal.</p>
                   </div>
                 ) : (
                   alerts.map((alert) => {
@@ -351,39 +345,19 @@ const Dashboard = () => {
                       <div
                         key={alert.id}
                         onClick={() => handleAlertClick(alert)}
-                        style={{
-                          ...getRowStyle({ hasAlert: true, alertSeverity: alert.severity }),
-                          border: '1px solid #e5e7eb',
-                          borderLeft: `4px solid ${config.iconColor}`,
-                          borderRadius: '8px',
-                          padding: '1rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.transform = 'translateY(-1px)'
-                          e.target.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.15)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.transform = 'translateY(0)'
-                          e.target.style.boxShadow = 'none'
-                        }}
+                        className={`alert-feed-item ${alert.severity.toLowerCase()}`}
                       >
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                          <IconComponent style={{ width: '1.25rem', height: '1.25rem', color: config.iconColor, flexShrink: 0, marginTop: '0.125rem' }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                              <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {alert.drug_name}
-                              </h4>
-                              <span style={{ fontSize: '0.75rem', color: '#6b7280', flexShrink: 0, marginLeft: '0.5rem' }}>
-                                {Math.floor((Date.now() - alert.timestamp) / (1000 * 60 * 60))}h ago
-                              </span>
-                            </div>
-                            <p style={{ margin: 0, fontSize: '0.875rem', color: '#374151', lineHeight: '1.4' }}>
-                              {alert.description}
-                            </p>
+                        <div className="alert-header">
+                          <div className="alert-icon">
+                            <IconComponent style={{ width: '1.25rem', height: '1.25rem', color: config.iconColor }} />
                           </div>
+                          <div className="alert-content">
+                            <h4 className="alert-title">{alert.drug_name}</h4>
+                            <p className="alert-description">{alert.description}</p>
+                          </div>
+                          <span className="alert-time">
+                            {Math.floor((Date.now() - alert.timestamp) / (1000 * 60 * 60))}h ago
+                          </span>
                         </div>
                       </div>
                     )
