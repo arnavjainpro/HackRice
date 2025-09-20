@@ -38,6 +38,10 @@ const InventoryScanTable = () => {
   const [aiRecommendations, setAiRecommendations] = useState(null)
   const [loadingAI, setLoadingAI] = useState(false)
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(25)
+  
   // Track if current data is from cache vs fresh scan
   const [isDataFromCache, setIsDataFromCache] = useState(false)
 
@@ -279,6 +283,21 @@ const InventoryScanTable = () => {
     return filtered
   }, [scanData, searchTerm, filterConfig, sortConfig])
 
+  // Pagination logic
+  const paginatedData = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredData.slice(startIndex, endIndex)
+  }, [filteredData, currentPage, itemsPerPage])
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterConfig])
+
   // Handle sorting
   const handleSort = (key) => {
     setSortConfig(prevConfig => ({
@@ -372,23 +391,6 @@ const InventoryScanTable = () => {
               }}>
                 <Clock style={{ width: '0.75rem', height: '0.75rem' }} />
                 Last scan: {lastScanTime.toLocaleTimeString()}
-              </div>
-            )}
-            
-            {scanData && isDataFromCache && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                fontSize: '0.625rem',
-                color: '#059669',
-                backgroundColor: '#ecfdf5',
-                padding: '0.25rem 0.5rem',
-                borderRadius: '4px',
-                border: '1px solid #a7f3d0'
-              }}>
-                <Package style={{ width: '0.625rem', height: '0.625rem' }} />
-                Data loaded from cache
               </div>
             )}
           </div>
@@ -684,11 +686,12 @@ const InventoryScanTable = () => {
 
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        {scanData && filteredData.length > 0 ? (
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse'
-          }}>
+        {scanData && paginatedData.length > 0 ? (
+          <>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse'
+            }}>
             <thead>
               <tr style={{
                 backgroundColor: '#f9fafb',
@@ -814,7 +817,7 @@ const InventoryScanTable = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((item) => {
+              {paginatedData.map((item) => {
                 const StatusIcon = getStatusIcon(item.alert_level)
                 
                 return (
@@ -979,6 +982,150 @@ const InventoryScanTable = () => {
               })}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          {filteredData.length > itemsPerPage && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '1rem 1.5rem',
+              borderTop: '1px solid #e5e7eb',
+              backgroundColor: '#f9fafb'
+            }}>
+              {/* Results Info */}
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#6b7280'
+              }}>
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} results
+              </div>
+
+              {/* Pagination Buttons */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                {/* Previous Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: currentPage === 1 ? '#f3f4f6' : '#ffffff',
+                    color: currentPage === 1 ? '#9ca3af' : '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== 1) {
+                      e.target.style.backgroundColor = '#f3f4f6'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== 1) {
+                      e.target.style.backgroundColor = '#ffffff'
+                    }
+                  }}
+                >
+                  Previous
+                </button>
+
+                {/* Page Numbers */}
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  {Array.from({ length: totalPages }, (_, index) => {
+                    const pageNumber = index + 1
+                    const isCurrentPage = pageNumber === currentPage
+                    
+                    // Show first page, last page, current page, and pages around current page
+                    if (
+                      pageNumber === 1 ||
+                      pageNumber === totalPages ||
+                      (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => setCurrentPage(pageNumber)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: isCurrentPage ? '#3b82f6' : '#ffffff',
+                            color: isCurrentPage ? '#ffffff' : '#374151',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            fontSize: '0.875rem',
+                            fontWeight: isCurrentPage ? '600' : '400',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            minWidth: '2.5rem'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isCurrentPage) {
+                              e.target.style.backgroundColor = '#f3f4f6'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isCurrentPage) {
+                              e.target.style.backgroundColor = '#ffffff'
+                            }
+                          }}
+                        >
+                          {pageNumber}
+                        </button>
+                      )
+                    } else if (
+                      (pageNumber === currentPage - 2 && currentPage > 3) ||
+                      (pageNumber === currentPage + 2 && currentPage < totalPages - 2)
+                    ) {
+                      return (
+                        <span key={pageNumber} style={{
+                          padding: '0.5rem 0.25rem',
+                          color: '#9ca3af',
+                          fontSize: '0.875rem'
+                        }}>
+                          ...
+                        </span>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: currentPage === totalPages ? '#f3f4f6' : '#ffffff',
+                    color: currentPage === totalPages ? '#9ca3af' : '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== totalPages) {
+                      e.target.style.backgroundColor = '#f3f4f6'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== totalPages) {
+                      e.target.style.backgroundColor = '#ffffff'
+                    }
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         ) : scanData ? (
           <div style={{
             padding: '2rem',
