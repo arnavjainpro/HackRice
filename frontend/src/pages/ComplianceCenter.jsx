@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from '../components/ui'
+import PharmacyStockTable from '../components/PharmacyStockTable'
 import { 
   Shield, 
   FileText, 
@@ -159,7 +160,7 @@ const ComplianceCenter = () => {
       minHeight: 'calc(100vh - 4rem)'
     }}>
       <div style={{
-        maxWidth: '1400px',
+        width: '100%',
         margin: '0 auto'
       }}>
         {/* Header */}
@@ -222,141 +223,10 @@ const ComplianceCenter = () => {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div>
-            {/* Stats Grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-              gap: '1.5rem',
-              marginBottom: '2rem'
-            }}>
-              <div style={{
-                backgroundColor: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                border: '1px solid #fecaca'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '1rem'
-                }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#6b7280'
-                  }}>
-                    Overall Compliance Score
-                  </h3>
-                  <TrendingUp style={{ width: '1.25rem', height: '1.25rem', color: '#059669' }} />
-                </div>
-                <p style={{
-                  margin: 0,
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: '#059669'
-                }}>
-                  {complianceStats.overallScore}%
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                border: '1px solid #fecaca'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '1rem'
-                }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#6b7280'
-                  }}>
-                    Total Audits
-                  </h3>
-                  <FileText style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-                </div>
-                <p style={{
-                  margin: 0,
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: '#111827'
-                }}>
-                  {complianceStats.totalAudits}
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                border: '1px solid #fecaca'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '1rem'
-                }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#6b7280'
-                  }}>
-                    Pending Items
-                  </h3>
-                  <Clock style={{ width: '1.25rem', height: '1.25rem', color: '#d97706' }} />
-                </div>
-                <p style={{
-                  margin: 0,
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: '#d97706'
-                }}>
-                  {complianceStats.pendingItems}
-                </p>
-              </div>
-
-              <div style={{
-                backgroundColor: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                border: '1px solid #fecaca'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '1rem'
-                }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#6b7280'
-                  }}>
-                    Last Audit
-                  </h3>
-                  <Calendar style={{ width: '1.25rem', height: '1.25rem', color: '#6b7280' }} />
-                </div>
-                <p style={{
-                  margin: 0,
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: '#111827'
-                }}>
-                  {new Date(complianceStats.lastAudit).toLocaleDateString()}
-                </p>
-              </div>
+          <div className="compliance-dashboard">
+            {/* Pharmacy Stock Inventory */}
+            <div style={{ marginBottom: '2rem' }}>
+              <PharmacyStockTable />
             </div>
 
             {/* Recent Activity */}
