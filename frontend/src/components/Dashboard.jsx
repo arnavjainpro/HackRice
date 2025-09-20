@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Button, Alert } from './ui'
-import { Pill, AlertOctagon, AlertTriangle, RefreshCw, Send, Copy, X, Lightbulb } from 'lucide-react'
+import { Pill, AlertOctagon, AlertTriangle, RefreshCw, Send, Copy, X, Lightbulb, ShieldAlert } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 // Enhanced Dashboard with RxBridge functionality
@@ -32,7 +32,8 @@ const Dashboard = () => {
       avg_daily_use: 15,
       days_of_supply: 8,
       hasAlert: true,
-      alertSeverity: 'CRITICAL'
+      alertSeverity: 'CRITICAL',
+      isRecalled: false
     },
     {
       id: 2,
@@ -40,7 +41,8 @@ const Dashboard = () => {
       stock_level: 450,
       avg_daily_use: 32,
       days_of_supply: 14,
-      hasAlert: false
+      hasAlert: false,
+      isRecalled: false
     },
     {
       id: 3,
@@ -49,7 +51,8 @@ const Dashboard = () => {
       avg_daily_use: 22,
       days_of_supply: 4,
       hasAlert: true,
-      alertSeverity: 'AWARENESS'
+      alertSeverity: 'AWARENESS',
+      isRecalled: false
     },
     {
       id: 4,
@@ -57,7 +60,8 @@ const Dashboard = () => {
       stock_level: 256,
       avg_daily_use: 18,
       days_of_supply: 14,
-      hasAlert: false
+      hasAlert: false,
+      isRecalled: false
     },
     {
       id: 5,
@@ -66,7 +70,59 @@ const Dashboard = () => {
       avg_daily_use: 12,
       days_of_supply: 6,
       hasAlert: true,
-      alertSeverity: 'ROUTINE_REORDER'
+      alertSeverity: 'ROUTINE_REORDER',
+      isRecalled: false
+    },
+    {
+      id: 6,
+      drug_name: 'Losartan 50mg',
+      stock_level: 240,
+      avg_daily_use: 28,
+      days_of_supply: 8,
+      hasAlert: true,
+      alertSeverity: 'CRITICAL',
+      isRecalled: true,
+      recallInfo: {
+        recallDate: '2025-09-15',
+        recallReason: 'Potential carcinogen contamination - NDMA impurity detected',
+        recallSeverity: 'Class I',
+        recallNumber: 'Z-1234-2025',
+        fda_url: 'https://www.fda.gov/safety/recalls'
+      }
+    },
+    {
+      id: 7,
+      drug_name: 'Valsartan 160mg',
+      stock_level: 156,
+      avg_daily_use: 22,
+      days_of_supply: 7,
+      hasAlert: true,
+      alertSeverity: 'CRITICAL',
+      isRecalled: true,
+      recallInfo: {
+        recallDate: '2025-09-10',
+        recallReason: 'Manufacturing defect - incorrect labeling on bottles',
+        recallSeverity: 'Class II',
+        recallNumber: 'Z-5678-2025',
+        fda_url: 'https://www.fda.gov/safety/recalls'
+      }
+    },
+    {
+      id: 8,
+      drug_name: 'Ranitidine 150mg',
+      stock_level: 89,
+      avg_daily_use: 15,
+      days_of_supply: 6,
+      hasAlert: true,
+      alertSeverity: 'CRITICAL',
+      isRecalled: true,
+      recallInfo: {
+        recallDate: '2025-09-08',
+        recallReason: 'NDMA contamination above acceptable limits',
+        recallSeverity: 'Class I',
+        recallNumber: 'Z-9012-2025',
+        fda_url: 'https://www.fda.gov/safety/recalls'
+      }
     }
   ])
 
@@ -91,6 +147,30 @@ const Dashboard = () => {
       severity: 'ROUTINE_REORDER',
       description: 'Routine reorder suggested based on usage patterns',
       timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000)
+    },
+    {
+      id: 4,
+      drug_name: 'Losartan 50mg',
+      severity: 'RECALL',
+      description: 'FDA Class I Recall: Potential carcinogen contamination - NDMA impurity detected. Stop dispensing immediately.',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      recallNumber: 'Z-1234-2025'
+    },
+    {
+      id: 5,
+      drug_name: 'Valsartan 160mg',
+      severity: 'RECALL',
+      description: 'FDA Class II Recall: Manufacturing defect - incorrect labeling on bottles. Verify all prescriptions.',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      recallNumber: 'Z-5678-2025'
+    },
+    {
+      id: 6,
+      drug_name: 'Ranitidine 150mg',
+      severity: 'RECALL',
+      description: 'FDA Class I Recall: NDMA contamination above acceptable limits. Immediate withdrawal required.',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      recallNumber: 'Z-9012-2025'
     }
   ])
 
@@ -157,6 +237,13 @@ const Dashboard = () => {
           icon: RefreshCw,
           iconColor: '#2563eb'
         }
+      case 'RECALL':
+        return {
+          borderColor: 'border-l-red-600',
+          bgColor: '#fef1f1',
+          icon: ShieldAlert,
+          iconColor: '#b91c1c'
+        }
       default:
         return {
           borderColor: 'border-l-slate-500',
@@ -174,6 +261,14 @@ const Dashboard = () => {
   }
 
   const getRowStyle = (item) => {
+    // Recalled medicines get highest priority styling
+    if (item.isRecalled) {
+      return { 
+        backgroundColor: '#fef1f1',
+        borderLeft: '4px solid #dc2626'
+      }
+    }
+    
     if (!item.hasAlert) return { backgroundColor: '#ffffff' }
     
     switch (item.alertSeverity) {
@@ -213,12 +308,22 @@ const Dashboard = () => {
                 </thead>
                 <tbody>
                   {inventoryList.map((item) => (
-                    <tr key={item.id} style={getRowStyle(item)}>
+                    <tr key={item.id} style={getRowStyle(item)} className={item.isRecalled ? 'recalled-drug' : ''}>
                       <td>
-                        <div className="drug-name">{item.drug_name}</div>
+                        <div className="drug-name">
+                          {item.drug_name}
+                          {item.isRecalled && (
+                            <span className="recall-badge">RECALLED</span>
+                          )}
+                        </div>
                         {item.hasAlert && (
                           <div className="drug-alert">
                             Alert: {item.alertSeverity.replace('_', ' ')}
+                          </div>
+                        )}
+                        {item.isRecalled && item.recallInfo && (
+                          <div className="recall-info">
+                            Recall: {item.recallInfo.recallSeverity} - {item.recallInfo.recallReason}
                           </div>
                         )}
                       </td>
