@@ -99,20 +99,21 @@ class InventoryChecker:
                 return 'BLUE'
             return None
 
-    def _format_api_response(self, flagged_items: list) -> dict:
+    def _format_api_response(self, flagged_items: list, total_inventory_count: int) -> dict:
         if not flagged_items:
             return {
                 "status": "success",
                 "timestamp": pd.Timestamp.now().isoformat(),
                 "summary": {
-                    "total_items_checked": 0,
+                    "total_items_checked": total_inventory_count,
                     "items_requiring_attention": 0,
                     "recall_items": 0,
                     "shortage_items": 0,
                     "discontinuation_items": 0,
                     "low_stock_items": 0,
                     "alert_breakdown": {},
-                    "critical_items": 0
+                    "critical_items": 0,
+                    "avg_days_supply": 0
                 },
                 "recalls": [],
                 "other_alerts": []
@@ -160,7 +161,7 @@ class InventoryChecker:
             "status": "success",
             "timestamp": pd.Timestamp.now().isoformat(),
             "summary": {
-                "total_items_checked": len(flagged_items),  # (If needed, replace with total inventory count)
+                "total_items_checked": total_inventory_count,  # Show actual total items checked
                 "items_requiring_attention": len(flagged_items),
                 "recall_items": len(sorted_recalls),
                 "shortage_items": len([i for i in sorted_other_alerts if 'Shortage' in i.get('flag_status', '')]),
@@ -181,16 +182,37 @@ class InventoryChecker:
     def evaluate(self, inventory_df: pd.DataFrame, fda_df: pd.DataFrame, return_df: bool = False):
         """
         Core evaluation: match inventory with FDA data and produce alerts JSON.
+        Optimized for performance - processes inventory efficiently.
         Returns (json, df?) depending on return_df.
         """
         if inventory_df is None or inventory_df.empty:
             return {"status": "error", "message": "No inventory data available"}, (pd.DataFrame() if return_df else None)
 
+        # Count total inventory items
+        total_inventory_count = len(inventory_df)
+        logger.info(f"Processing {total_inventory_count} inventory items for compliance check")
+        
         fda_names = fda_df['fda_drug_name'].tolist() if (fda_df is not None and not fda_df.empty) else []
         flagged_items = []
 
-        for _, inv_row in inventory_df.iterrows():
+        # Performance optimization: pre-clean FDA names for faster matching
+        if fda_names:
+            clean_fda_lookup = {self.clean_drug_name(name): name for name in fda_names}
+            clean_fda_names = list(clean_fda_lookup.keys())
+        else:
+            clean_fda_lookup = {}
+            clean_fda_names = []
+
+        # Process inventory items efficiently
+        for idx, inv_row in inventory_df.iterrows():
+            # Show progress for large inventories
+            if idx % 100 == 0 and idx > 0:
+                logger.info(f"Processed {idx}/{total_inventory_count} items...")
+                
             drug_name = inv_row.get('drug_name', '') or inv_row.get('Name', '')
+            if not drug_name:
+                continue
+                
             stock = int(inv_row.get('stock', inv_row.get('Quantity', 0)) or 0)
             daily_dispense = inv_row.get('average_daily_dispense', inv_row.get('avg_daily_dispensed', 0)) or 0
             days_supply = (stock / daily_dispense) if daily_dispense and daily_dispense > 0 else float('inf')
@@ -198,8 +220,30 @@ class InventoryChecker:
             fda_match = None
             matched_name, confidence, match_type = None, 0, "no_match"
 
-            if fda_names:
-                matched_name, confidence, match_type = self.find_drug_match(drug_name, fda_names)
+            # Optimized FDA matching using pre-cleaned lookup
+            if clean_fda_names:
+                clean_drug = self.clean_drug_name(drug_name)
+                
+                # Check exact match first (fastest)
+                if clean_drug in clean_fda_lookup:
+                    matched_name = clean_fda_lookup[clean_drug]
+                    confidence, match_type = 100, "exact"
+                elif clean_drug:  # Only do fuzzy matching if exact fails
+                    try:
+                        best_match = process.extractOne(
+                            clean_drug,
+                            clean_fda_names,
+                            scorer=fuzz.token_sort_ratio,
+                            score_cutoff=self.fuzzy_match_threshold
+                        )
+                        if best_match:
+                            matched_clean_name, confidence = best_match
+                            matched_name = clean_fda_lookup[matched_clean_name]
+                            match_type = "fuzzy"
+                    except:
+                        pass  # Skip fuzzy matching errors to maintain performance
+                
+                # Get FDA data if we have a good match
                 if matched_name and confidence >= self.fuzzy_match_threshold:
                     fda_match = fda_df[fda_df['fda_drug_name'] == matched_name].iloc[0]
 
@@ -240,7 +284,7 @@ class InventoryChecker:
                     'has_fda_issue': is_flagged
                 })
 
-        api_json = self._format_api_response(flagged_items)
+        api_json = self._format_api_response(flagged_items, total_inventory_count)
         if return_df:
             df = pd.DataFrame(flagged_items) if flagged_items else pd.DataFrame()
             if not df.empty:

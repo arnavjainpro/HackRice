@@ -100,7 +100,7 @@ def run_inventory_check():
     try:
         fda_api_key = os.getenv("FDA_API_KEY")  # optional, fine if None
         recall_client = FDARecallRetriever(api_key=fda_api_key)
-        recall_df = recall_client.get_all_recalls_df(limit=500)  # already cleaned/sorted in module
+        recall_df = recall_client.get_all_recalls_df()  # Remove limit to get all available recalls
     except Exception as e:
         logger.exception("Failed to fetch FDA recalls")
         raise HTTPException(status_code=502, detail=f"Failed to fetch FDA recalls: {e}")
