@@ -56,7 +56,6 @@ class SupabaseRetriever:
     def get_pharmacy_inventory(
         self, 
         columns: Optional[List[str]] = None,
-        limit: Optional[int] = None,
         filters: Optional[Dict[str, Any]] = None
     ) -> pd.DataFrame:
         """
@@ -64,11 +63,10 @@ class SupabaseRetriever:
         
         Args:
             columns: List of columns to select (use actual column names)
-            limit: Maximum number of records
             filters: Dictionary of filters to apply
             
         Returns:
-            DataFrame with inventory data
+            DataFrame with inventory data (no limit - gets all available data)
         """
         try:
             # ✅ FIXED: Default to correct column names
@@ -95,10 +93,6 @@ class SupabaseRetriever:
                                 query = query.lte(column, value)
                     else:
                         query = query.eq(column, filter_config)
-            
-            # Apply limit
-            if limit:
-                query = query.limit(limit)
             
             response = query.execute()
             

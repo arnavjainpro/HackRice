@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from '../components/ui'
-import PharmacyStockTable from '../components/PharmacyStockTable'
+import InventoryScanTable from '../components/InventoryScanTable'
 import { 
   Shield, 
   FileText, 
@@ -153,12 +153,21 @@ const ComplianceCenter = () => {
   ]
 
   return (
-    <div style={{
-      width: '100%',
-      padding: '2rem',
-      backgroundColor: '#f9fafb',
-      minHeight: 'calc(100vh - 4rem)'
-    }}>
+    <div>
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+      <div style={{
+        width: '100%',
+        padding: '2rem',
+        backgroundColor: '#f9fafb',
+        minHeight: 'calc(100vh - 4rem)'
+      }}>
       <div style={{
         width: '100%',
         margin: '0 auto'
@@ -224,9 +233,9 @@ const ComplianceCenter = () => {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="compliance-dashboard">
-            {/* Pharmacy Stock Inventory */}
+            {/* Inventory Compliance Scan */}
             <div style={{ marginBottom: '2rem' }}>
-              <PharmacyStockTable />
+              <InventoryScanTable />
             </div>
 
             {/* Recent Activity */}
@@ -727,6 +736,7 @@ const ComplianceCenter = () => {
         )}
       </div>
     </div>
+  </div>
   )
 }
 

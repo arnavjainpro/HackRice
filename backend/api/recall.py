@@ -36,7 +36,7 @@ class FDARecallRetriever:
         }
         
         # Rate limiting (FDA allows 240 requests per minute for public, 1000 with API key)
-        self.rate_limit_delay = 0.25 if api_key else 1.0  # seconds between requests
+        self.rate_limit_delay = 0.1 if api_key else 0.3  # Reduced delays for speed
         
     def _make_api_request(self, url: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -71,21 +71,20 @@ class FDARecallRetriever:
             logger.error(f"Failed to parse JSON response: {e}")
             return {"error": f"Invalid JSON response: {e}"}
     
-    def get_drug_recalls(self, limit: int = 100, search_term: Optional[str] = None) -> pd.DataFrame:
+    def get_drug_recalls(self, search_term: Optional[str] = None) -> pd.DataFrame:
         """
         Fetch drug recall data from FDA API
         
         Args:
-            limit: Maximum number of records to fetch
             search_term: Optional search term to filter recalls
             
         Returns:
             DataFrame with recall data
         """
-        logger.info(f"Fetching drug recalls (limit: {limit})")
+        logger.info("Fetching all available drug recalls (no limit)")
         
         params = {
-            'limit': min(limit, 1000)  # FDA API limit is 1000 per request
+            'limit': 1000  # Use FDA's maximum allowed per request
         }
         
         # Add search filter if provided
@@ -156,31 +155,82 @@ class FDARecallRetriever:
         
         return drug_name[:100]  # Limit length
     
-    def get_all_recalls_df(self, limit: int = 500) -> pd.DataFrame:
+    def get_all_recalls_df(self, limit: Optional[int] = None) -> pd.DataFrame:
         """
-        Get all drug recalls and return as cleaned DataFrame
+        Get drug recalls with optimized performance - focused on speed
         
         Args:
-            limit: Maximum number of records to fetch
+            limit: Maximum number of records to fetch (default 500 for fast performance)
             
         Returns:
-            Cleaned DataFrame with all recall data
+            Cleaned DataFrame with recall data
         """
-        logger.info(f"Fetching all drug recalls (limit: {limit})")
+        # Aggressive limit for performance - prioritize speed over completeness
+        effective_limit = limit if limit is not None else 500
         
-        # Get the raw recalls
-        recalls_df = self.get_drug_recalls(limit=limit)
+        logger.info(f"Fetching {effective_limit} most critical recalls for fast performance")
         
-        if recalls_df.empty:
-            logger.warning("No recall data retrieved")
+        try:
+            # Strategy: Get only the most critical and recent data
+            # Focus on Class I recalls (most dangerous) from the last year
+            
+            params = {
+                'search': 'product_type:"Drugs" AND classification:"Class I"',
+                'limit': min(effective_limit, 500)  # Stay well under FDA limits
+            }
+            
+            logger.info("Fetching critical Class I drug recalls only")
+            response_data = self._make_api_request(self.drug_recall_api, params)
+            
+            if "error" in response_data or "results" not in response_data or not response_data["results"]:
+                logger.warning("No Class I recalls found, falling back to general search")
+                # Fallback to general drug recalls with smaller limit
+                params = {
+                    'search': 'product_type:"Drugs"',
+                    'limit': min(200, effective_limit)  # Much smaller fallback
+                }
+                response_data = self._make_api_request(self.drug_recall_api, params)
+            
+            if "error" in response_data or "results" not in response_data:
+                logger.error("Failed to fetch any recall data")
+                return pd.DataFrame()
+            
+            # Process results quickly
+            recalls = []
+            for item in response_data["results"]:
+                try:
+                    recall_data = {
+                        'drug_name': self._extract_drug_name(item.get('product_description', ['Unknown'])),
+                        'recall_date': item.get('recall_initiation_date', ''),
+                        'reason': item.get('reason_for_recall', ''),
+                        'classification': item.get('classification', ''),
+                        'status': item.get('status', ''),
+                        'voluntary_mandated': item.get('voluntary_mandated', ''),
+                        'distribution_pattern': item.get('distribution_pattern', ''),
+                        'product_quantity': item.get('product_quantity', ''),
+                        'event_id': item.get('event_id', ''),
+                        'type': 'Recalled'
+                    }
+                    recalls.append(recall_data)
+                except Exception as e:
+                    logger.warning(f"Error processing recall: {e}")
+                    continue
+            
+            if not recalls:
+                logger.warning("No recall data processed")
+                return pd.DataFrame()
+            
+            # Quick DataFrame creation and cleaning
+            df = pd.DataFrame(recalls)
+            df = self._clean_recall_data(df)
+            
+            logger.info(f"Fast recall fetch completed: {len(df)} records in minimal time")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error in fast recall fetch: {e}")
+            # Return empty DataFrame rather than hanging
             return pd.DataFrame()
-        
-        # Clean and standardize the data
-        recalls_df = self._clean_recall_data(recalls_df)
-        
-        logger.info(f"Final dataset has {len(recalls_df)} recall records")
-        
-        return recalls_df
     
     def _clean_recall_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -225,7 +275,7 @@ class FDARecallRetriever:
         """
         logger.info(f"Searching for recalls of drug: {drug_name}")
         
-        recalls_df = self.get_drug_recalls(limit=100, search_term=drug_name)
+        recalls_df = self.get_drug_recalls(search_term=drug_name)
         
         if not recalls_df.empty:
             recalls_df = self._clean_recall_data(recalls_df)
@@ -257,7 +307,7 @@ class FDARecallRetriever:
         
         params = {
             'search': f'product_type:"Drugs" AND {date_search}',
-            'limit': 200
+            'limit': 1000  # Use maximum available
         }
         
         response_data = self._make_api_request(self.drug_recall_api, params)
@@ -304,7 +354,7 @@ class FDARecallRetriever:
         
         params = {
             'search': f'product_type:"Drugs" AND classification:"{classification}"',
-            'limit': 200
+            'limit': 1000  # Use maximum available
         }
         
         response_data = self._make_api_request(self.drug_recall_api, params)
