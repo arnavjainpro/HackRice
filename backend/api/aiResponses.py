@@ -237,12 +237,16 @@ class AiAlternativeFinder:
             # Generate communication
             communication = self.generate_communication_for_doctor(drug_name, validated_alternatives)
             
+            # Generate doctor information (this would normally come from a database)
+            doctor_info = self._get_doctor_info_for_drug(drug_name)
+            
             return {
                 'status': 'success',
                 'drug_name': drug_name,
                 'alert_info': drug_alert_data,
                 'suggested_alternatives': validated_alternatives,
                 'email_draft': communication,
+                'doctor_info': doctor_info,
                 'alternatives_found': len(validated_alternatives)
             }
             
@@ -254,5 +258,52 @@ class AiAlternativeFinder:
                 'error': str(e),
                 'suggested_alternatives': [],
                 'email_draft': '',
+                'doctor_info': self._get_default_doctor_info(),
                 'alternatives_found': 0
             }
+
+    def _get_doctor_info_for_drug(self, drug_name: str) -> Dict[str, str]:
+        """
+        Get prescribing doctor information for a specific drug.
+        In a real system, this would query the prescription database.
+        """
+        # This is mock data - in a real system, you'd query your prescription database
+        # to find which doctor prescribed this medication
+        mock_doctors = {
+            "Lidocaine Hydrochloride Injection": {
+                "name": "Dr. Sarah Johnson, MD",
+                "specialty": "Anesthesiology",
+                "phone": "(555) 123-4567",
+                "email": "sjohnson@medicenter.com",
+                "hospital": "Central Medical Center"
+            },
+            "Atorvastatin": {
+                "name": "Dr. Michael Chen, MD",
+                "specialty": "Cardiology", 
+                "phone": "(555) 234-5678",
+                "email": "mchen@heartcenter.com",
+                "hospital": "Heart & Vascular Institute"
+            },
+            "Amoxicillin": {
+                "name": "Dr. Lisa Rodriguez, MD",
+                "specialty": "Internal Medicine",
+                "phone": "(555) 345-6789", 
+                "email": "lrodriguez@primarycare.com",
+                "hospital": "Primary Care Associates"
+            }
+        }
+        
+        # Try to find specific doctor for this drug, otherwise return default
+        return mock_doctors.get(drug_name, self._get_default_doctor_info())
+    
+    def _get_default_doctor_info(self) -> Dict[str, str]:
+        """
+        Default doctor information when specific prescriber is not found.
+        """
+        return {
+            "name": "Dr. Robert Smith, MD",
+            "specialty": "General Practice",
+            "phone": "(555) 456-7890",
+            "email": "rsmith@generalpractice.com", 
+            "hospital": "General Medical Group"
+        }

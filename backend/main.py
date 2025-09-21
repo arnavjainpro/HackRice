@@ -181,7 +181,8 @@ def get_ai_recommendations(request: AIRecommendationRequest):
                 "d2": None,
                 "alt3": None,
                 "d3": None,
-                "email": f"AI system unavailable: {str(e)}"
+                "doctor_info": {},
+                "email_draft": f"AI system unavailable: {str(e)}"
             })
     
     try:
@@ -205,7 +206,8 @@ def get_ai_recommendations(request: AIRecommendationRequest):
                 "d2": None,
                 "alt3": None,
                 "d3": None,
-                "email": f"Error generating recommendations: {result.get('error', 'Unknown error')}"
+                "doctor_info": {},
+                "email_draft": f"Error generating recommendations: {result.get('error', 'Unknown error')}"
             })
         
         # Extract alternatives from the result
@@ -220,7 +222,8 @@ def get_ai_recommendations(request: AIRecommendationRequest):
             "d2": None,
             "alt3": None,
             "d3": None,
-            "email": email_draft if email_draft else "Contact your prescribing physician for guidance on medication alternatives."
+            "doctor_info": result.get('doctor_info', {}),
+            "email_draft": email_draft if email_draft else "Contact your prescribing physician for guidance on medication alternatives."
         }
         
         # Fill in alternatives and create descriptions
@@ -233,7 +236,7 @@ def get_ai_recommendations(request: AIRecommendationRequest):
         
         # If no alternatives found, set appropriate message
         if not alternatives:
-            response["email"] = "No suitable alternatives with adequate supply currently available. Contact emergency supplier or prescribing physician for guidance."
+            response["email_draft"] = "No suitable alternatives with adequate supply currently available. Contact emergency supplier or prescribing physician for guidance."
         
         return JSONResponse(content=response)
         
@@ -246,5 +249,6 @@ def get_ai_recommendations(request: AIRecommendationRequest):
             "d2": None,
             "alt3": None,
             "d3": None,
-            "email": f"System error: {str(e)}"
+            "doctor_info": {},
+            "email_draft": f"System error: {str(e)}"
         })
