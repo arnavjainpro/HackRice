@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Header from '../components/Header';
 import InventoryTable from '../components/InventoryTable';
+import InventoryScanTable from '../components/InventoryScanTable';
 import SimulationPanel from '../components/SimulationPanel';
 import AlertFeed from '../components/AlertFeed';
 import AlertDetailModal from '../components/AlertDetailModal';
@@ -108,20 +109,26 @@ const DashboardPage = ({ user, onLogout }) => {
       <Header user={user} onLogout={onLogout} />
       
       <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-          {/* Left Column - Inventory Table (70% on desktop) */}
-          <div className="lg:col-span-7">
-            <InventoryTable inventoryList={inventoryList} />
-          </div>
+        <div className="space-y-6">
+          {/* Compliance Scan Section - Full Width */}
+          <InventoryScanTable />
           
-          {/* Right Column - Simulation Panel + Alert Feed (30% on desktop) */}
-          <div className="lg:col-span-3 space-y-6">
-            <SimulationPanel
-              inventoryList={inventoryList}
-              onTriggerShortage={handleTriggerShortage}
-              isLoading={isLoading}
-            />
-            <AlertFeed alerts={alerts} onAlertClick={handleAlertClick} />
+          {/* Original Dashboard Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+            {/* Left Column - Inventory Table (70% on desktop) */}
+            <div className="lg:col-span-7">
+              <InventoryTable inventoryList={inventoryList} />
+            </div>
+            
+            {/* Right Column - Simulation Panel + Alert Feed (30% on desktop) */}
+            <div className="lg:col-span-3 space-y-6">
+              <SimulationPanel
+                inventoryList={inventoryList}
+                onTriggerShortage={handleTriggerShortage}
+                isLoading={isLoading}
+              />
+              <AlertFeed alerts={alerts} onAlertClick={handleAlertClick} />
+            </div>
           </div>
         </div>
       </main>

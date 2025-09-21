@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from '../components/ui'
-import PharmacyStockTable from '../components/PharmacyStockTable'
+import InventoryScanTable from '../components/InventoryScanTable'
 import { 
   Shield, 
   FileText, 
@@ -153,19 +153,48 @@ const ComplianceCenter = () => {
   ]
 
   return (
-    <div style={{
-      width: '100%',
-      padding: '2rem',
-      backgroundColor: '#f9fafb',
-      minHeight: 'calc(100vh - 4rem)'
-    }}>
+    <div>
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          .compliance-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+          }
+          .compliance-tab-content {
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+          }
+          .compliance-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          .compliance-card-content {
+            flex: 1;
+            overflow: hidden;
+          }
+        `}
+      </style>
       <div style={{
         width: '100%',
-        margin: '0 auto'
+        padding: '2rem',
+        backgroundColor: '#f9fafb',
+        minHeight: 'calc(100vh - 4rem)'
       }}>
+      <div className="compliance-container">
         {/* Header */}
         <div style={{
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          height: '80px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
         }}>
           <h1 style={{
             fontSize: '2rem',
@@ -186,11 +215,15 @@ const ComplianceCenter = () => {
         {/* Tab Navigation */}
         <div style={{
           borderBottom: '1px solid #e5e7eb',
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          height: '60px',
+          display: 'flex',
+          alignItems: 'center'
         }}>
           <nav style={{
             display: 'flex',
-            gap: '2rem'
+            gap: '2rem',
+            height: '100%'
           }}>
             {tabs.map((tab) => {
               const IconComponent = tab.icon
@@ -210,7 +243,8 @@ const ComplianceCenter = () => {
                     cursor: 'pointer',
                     fontSize: '0.875rem',
                     fontWeight: '500',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    height: '100%'
                   }}
                 >
                   <IconComponent style={{ width: '1rem', height: '1rem' }} />
@@ -223,29 +257,41 @@ const ComplianceCenter = () => {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="compliance-dashboard">
-            {/* Pharmacy Stock Inventory */}
-            <div style={{ marginBottom: '2rem' }}>
-              <PharmacyStockTable />
+          <div className="compliance-tab-content">
+            {/* Inventory Compliance Scan */}
+            <div style={{ 
+              marginBottom: '2rem',
+              minHeight: '400px'
+            }}>
+              <InventoryScanTable />
             </div>
 
             {/* Recent Activity */}
-            <div style={{
+            <div className="compliance-card" style={{
               backgroundColor: '#ffffff',
               padding: '1.5rem',
               borderRadius: '12px',
-              border: '1px solid #fecaca'
+              border: '1px solid #fecaca',
+              minHeight: '320px'
             }}>
               <h3 style={{
                 margin: '0 0 1rem 0',
                 fontSize: '1.25rem',
                 fontWeight: '600',
-                color: '#dc2626'
+                color: '#dc2626',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center'
               }}>
                 Recent Compliance Activity
               </h3>
               
-              <div style={{ display: 'grid', gap: '1rem' }}>
+              <div className="compliance-card-content" style={{ 
+                display: 'grid', 
+                gap: '1rem',
+                gridTemplateRows: 'repeat(3, 1fr)',
+                minHeight: '240px'
+              }}>
                 {complianceItems.slice(0, 3).map((item) => {
                   const StatusIcon = getStatusIcon(item.status)
                   return (
@@ -256,29 +302,45 @@ const ComplianceCenter = () => {
                       padding: '1rem',
                       backgroundColor: '#f9fafb',
                       borderRadius: '8px',
-                      border: '1px solid #e5e7eb'
+                      border: '1px solid #e5e7eb',
+                      height: '72px',
+                      minHeight: '72px',
+                      overflow: 'hidden'
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '1rem',
+                        flex: 1,
+                        minWidth: 0
+                      }}>
                         <StatusIcon 
                           style={{ 
                             width: '1.25rem', 
                             height: '1.25rem', 
-                            color: getStatusColor(item.status) 
+                            color: getStatusColor(item.status),
+                            flexShrink: 0
                           }} 
                         />
-                        <div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
                           <h4 style={{
                             margin: '0 0 0.25rem 0',
                             fontSize: '0.875rem',
                             fontWeight: '500',
-                            color: '#111827'
+                            color: '#111827',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
                           }}>
                             {item.title}
                           </h4>
                           <p style={{
                             margin: 0,
                             fontSize: '0.75rem',
-                            color: '#6b7280'
+                            color: '#6b7280',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
                           }}>
                             Due: {new Date(item.dueDate).toLocaleDateString()}
                           </p>
@@ -288,7 +350,11 @@ const ComplianceCenter = () => {
                         fontSize: '0.75rem',
                         fontWeight: '500',
                         color: getStatusColor(item.status),
-                        textTransform: 'capitalize'
+                        textTransform: 'capitalize',
+                        flexShrink: 0,
+                        marginLeft: '1rem',
+                        minWidth: '80px',
+                        textAlign: 'right'
                       }}>
                         {item.status}
                       </span>
@@ -302,431 +368,561 @@ const ComplianceCenter = () => {
 
         {/* Audits Tab */}
         {activeTab === 'audits' && (
-          <div style={{
-            backgroundColor: '#ffffff',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid #fecaca'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '1.5rem'
+          <div className="compliance-tab-content">
+            <div className="compliance-card" style={{
+              backgroundColor: '#ffffff',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              border: '1px solid #fecaca',
+              minHeight: '600px'
             }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#dc2626'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '1.5rem',
+                height: '40px'
               }}>
-                Audit History
-              </h3>
-              <Button variant="secondary">
-                <Calendar style={{ width: '1rem', height: '1rem' }} />
-                Schedule Audit
-              </Button>
-            </div>
+                <h3 style={{
+                  margin: 0,
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: '#dc2626',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  Audit History
+                </h3>
+                <Button variant="secondary" style={{ height: '40px' }}>
+                  <Calendar style={{ width: '1rem', height: '1rem' }} />
+                  Schedule Audit
+                </Button>
+              </div>
 
-            <div style={{
-              overflowX: 'auto'
-            }}>
-              <table style={{
-                width: '100%',
-                borderCollapse: 'collapse'
+              <div className="compliance-card-content" style={{
+                overflowX: 'auto',
+                overflowY: 'auto',
+                maxHeight: '500px'
               }}>
-                <thead>
-                  <tr style={{
-                    borderBottom: '1px solid #e5e7eb'
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  minWidth: '800px'
+                }}>
+                  <thead style={{ 
+                    position: 'sticky',
+                    top: 0,
+                    backgroundColor: '#ffffff',
+                    zIndex: 1
                   }}>
-                    <th style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      color: '#374151'
+                    <tr style={{
+                      borderBottom: '1px solid #e5e7eb',
+                      height: '48px'
                     }}>
-                      Audit Title
-                    </th>
-                    <th style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      color: '#374151'
-                    }}>
-                      Date
-                    </th>
-                    <th style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      color: '#374151'
-                    }}>
-                      Auditor
-                    </th>
-                    <th style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      color: '#374151'
-                    }}>
-                      Status
-                    </th>
-                    <th style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      color: '#374151'
-                    }}>
-                      Score
-                    </th>
-                    <th style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      color: '#374151'
-                    }}>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentAudits.map((audit, index) => {
-                    const StatusIcon = getStatusIcon(audit.status)
-                    return (
-                      <tr key={audit.id} style={{
-                        borderBottom: index < recentAudits.length - 1 ? '1px solid #f3f4f6' : 'none'
+                      <th style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#374151',
+                        width: '25%'
                       }}>
-                        <td style={{
-                          padding: '1rem 0.75rem',
-                          fontSize: '0.875rem',
-                          color: '#111827'
+                        Audit Title
+                      </th>
+                      <th style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#374151',
+                        width: '15%'
+                      }}>
+                        Date
+                      </th>
+                      <th style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#374151',
+                        width: '25%'
+                      }}>
+                        Auditor
+                      </th>
+                      <th style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#374151',
+                        width: '15%'
+                      }}>
+                        Status
+                      </th>
+                      <th style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#374151',
+                        width: '10%'
+                      }}>
+                        Score
+                      </th>
+                      <th style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#374151',
+                        width: '10%'
+                      }}>
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentAudits.map((audit, index) => {
+                      const StatusIcon = getStatusIcon(audit.status)
+                      return (
+                        <tr key={audit.id} style={{
+                          borderBottom: index < recentAudits.length - 1 ? '1px solid #f3f4f6' : 'none',
+                          height: '60px'
                         }}>
-                          {audit.title}
-                        </td>
-                        <td style={{
-                          padding: '1rem 0.75rem',
-                          fontSize: '0.875rem',
-                          color: '#6b7280'
-                        }}>
-                          {new Date(audit.date).toLocaleDateString()}
-                        </td>
-                        <td style={{
-                          padding: '1rem 0.75rem',
-                          fontSize: '0.875rem',
-                          color: '#6b7280'
-                        }}>
-                          {audit.auditor}
-                        </td>
-                        <td style={{
-                          padding: '1rem 0.75rem'
-                        }}>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
+                          <td style={{
+                            padding: '1rem 0.75rem',
+                            fontSize: '0.875rem',
+                            color: '#111827',
+                            maxWidth: 0,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
                           }}>
-                            <StatusIcon 
-                              style={{ 
-                                width: '1rem', 
-                                height: '1rem', 
-                                color: getStatusColor(audit.status) 
-                              }} 
-                            />
-                            <span style={{
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              color: getStatusColor(audit.status),
-                              textTransform: 'capitalize'
-                            }}>
-                              {audit.status}
-                            </span>
-                          </div>
-                        </td>
-                        <td style={{
-                          padding: '1rem 0.75rem',
-                          fontSize: '0.875rem',
-                          color: '#111827',
-                          fontWeight: '600'
-                        }}>
-                          {audit.score ? `${audit.score}%` : '-'}
-                        </td>
-                        <td style={{
-                          padding: '1rem 0.75rem'
-                        }}>
-                          <div style={{
-                            display: 'flex',
-                            gap: '0.5rem'
+                            {audit.title}
+                          </td>
+                          <td style={{
+                            padding: '1rem 0.75rem',
+                            fontSize: '0.875rem',
+                            color: '#6b7280'
                           }}>
-                            <button style={{
-                              padding: '0.25rem',
-                              backgroundColor: 'transparent',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              color: '#6b7280'
+                            {new Date(audit.date).toLocaleDateString()}
+                          </td>
+                          <td style={{
+                            padding: '1rem 0.75rem',
+                            fontSize: '0.875rem',
+                            color: '#6b7280',
+                            maxWidth: 0,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {audit.auditor}
+                          </td>
+                          <td style={{
+                            padding: '1rem 0.75rem'
+                          }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
                             }}>
-                              <Eye style={{ width: '1rem', height: '1rem' }} />
-                            </button>
-                            <button 
-                              onClick={() => handleDownloadReport(audit.id)}
-                              disabled={loading}
-                              style={{
+                              <StatusIcon 
+                                style={{ 
+                                  width: '1rem', 
+                                  height: '1rem', 
+                                  color: getStatusColor(audit.status) 
+                                }} 
+                              />
+                              <span style={{
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                color: getStatusColor(audit.status),
+                                textTransform: 'capitalize'
+                              }}>
+                                {audit.status}
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{
+                            padding: '1rem 0.75rem',
+                            fontSize: '0.875rem',
+                            color: '#111827',
+                            fontWeight: '600'
+                          }}>
+                            {audit.score ? `${audit.score}%` : '-'}
+                          </td>
+                          <td style={{
+                            padding: '1rem 0.75rem'
+                          }}>
+                            <div style={{
+                              display: 'flex',
+                              gap: '0.5rem'
+                            }}>
+                              <button style={{
                                 padding: '0.25rem',
                                 backgroundColor: 'transparent',
                                 border: 'none',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                                color: '#6b7280'
-                              }}
-                            >
-                              <Download style={{ width: '1rem', height: '1rem' }} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                                color: '#6b7280',
+                                width: '32px',
+                                height: '32px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}>
+                                <Eye style={{ width: '1rem', height: '1rem' }} />
+                              </button>
+                              <button 
+                                onClick={() => handleDownloadReport(audit.id)}
+                                disabled={loading}
+                                style={{
+                                  padding: '0.25rem',
+                                  backgroundColor: 'transparent',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  color: '#6b7280',
+                                  width: '32px',
+                                  height: '32px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                              >
+                                <Download style={{ width: '1rem', height: '1rem' }} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
         {/* Compliance Tracking Tab */}
         {activeTab === 'tracking' && (
-          <div style={{
-            backgroundColor: '#ffffff',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid #fecaca'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '1.5rem'
+          <div className="compliance-tab-content">
+            <div className="compliance-card" style={{
+              backgroundColor: '#ffffff',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              border: '1px solid #fecaca',
+              minHeight: '600px'
             }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#dc2626'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '1.5rem',
+                height: '40px'
               }}>
-                Compliance Items Tracking
-              </h3>
-              <Button variant="secondary">
-                <Filter style={{ width: '1rem', height: '1rem' }} />
-                Filter
-              </Button>
-            </div>
+                <h3 style={{
+                  margin: 0,
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: '#dc2626',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  Compliance Items Tracking
+                </h3>
+                <Button variant="secondary" style={{ height: '40px' }}>
+                  <Filter style={{ width: '1rem', height: '1rem' }} />
+                  Filter
+                </Button>
+              </div>
 
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {complianceItems.map((item) => {
-                const StatusIcon = getStatusIcon(item.status)
-                return (
-                  <div key={item.id} style={{
-                    padding: '1.5rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    borderLeft: `4px solid ${getStatusColor(item.status)}`
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      marginBottom: '0.5rem'
+              <div className="compliance-card-content" style={{ 
+                display: 'grid', 
+                gap: '1rem',
+                maxHeight: '500px',
+                overflowY: 'auto',
+                paddingRight: '0.5rem'
+              }}>
+                {complianceItems.map((item) => {
+                  const StatusIcon = getStatusIcon(item.status)
+                  return (
+                    <div key={item.id} style={{
+                      padding: '1.5rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      borderLeft: `4px solid ${getStatusColor(item.status)}`,
+                      minHeight: '120px',
+                      maxHeight: '120px',
+                      overflow: 'hidden'
                     }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.75rem',
-                          marginBottom: '0.5rem'
-                        }}>
-                          <StatusIcon 
-                            style={{ 
-                              width: '1.25rem', 
-                              height: '1.25rem', 
-                              color: getStatusColor(item.status) 
-                            }} 
-                          />
-                          <h4 style={{
-                            margin: 0,
-                            fontSize: '1rem',
-                            fontWeight: '600',
-                            color: '#111827'
-                          }}>
-                            {item.title}
-                          </h4>
-                          <span style={{
-                            fontSize: '0.75rem',
-                            fontWeight: '500',
-                            color: '#6b7280',
-                            backgroundColor: '#f3f4f6',
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '4px'
-                          }}>
-                            {item.category}
-                          </span>
-                        </div>
-                        <p style={{
-                          margin: '0 0 0.5rem 0',
-                          fontSize: '0.875rem',
-                          color: '#6b7280',
-                          lineHeight: 1.5
-                        }}>
-                          {item.description}
-                        </p>
-                        <p style={{
-                          margin: 0,
-                          fontSize: '0.75rem',
-                          color: '#374151'
-                        }}>
-                          <strong>Due:</strong> {new Date(item.dueDate).toLocaleDateString()}
-                        </p>
-                      </div>
                       <div style={{
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem'
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        height: '100%'
                       }}>
-                        <span style={{
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          color: getStatusColor(item.status),
-                          textTransform: 'capitalize'
+                        <div style={{ 
+                          flex: 1, 
+                          minWidth: 0,
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column'
                         }}>
-                          {item.status}
-                        </span>
-                        <Button variant="ghost" size="sm">
-                          <Eye style={{ width: '1rem', height: '1rem' }} />
-                        </Button>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            marginBottom: '0.5rem',
+                            height: '32px'
+                          }}>
+                            <StatusIcon 
+                              style={{ 
+                                width: '1.25rem', 
+                                height: '1.25rem', 
+                                color: getStatusColor(item.status),
+                                flexShrink: 0
+                              }} 
+                            />
+                            <h4 style={{
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontWeight: '600',
+                              color: '#111827',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              flex: 1
+                            }}>
+                              {item.title}
+                            </h4>
+                            <span style={{
+                              fontSize: '0.75rem',
+                              fontWeight: '500',
+                              color: '#6b7280',
+                              backgroundColor: '#f3f4f6',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '4px',
+                              flexShrink: 0
+                            }}>
+                              {item.category}
+                            </span>
+                          </div>
+                          <p style={{
+                            margin: '0 0 0.5rem 0',
+                            fontSize: '0.875rem',
+                            color: '#6b7280',
+                            lineHeight: 1.4,
+                            overflow: 'hidden',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            flex: 1
+                          }}>
+                            {item.description}
+                          </p>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.75rem',
+                            color: '#374151',
+                            height: '20px',
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}>
+                            <strong>Due:</strong> {new Date(item.dueDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-end',
+                          gap: '0.75rem',
+                          marginLeft: '1rem',
+                          flexShrink: 0,
+                          height: '100%',
+                          justifyContent: 'space-between'
+                        }}>
+                          <span style={{
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: getStatusColor(item.status),
+                            textTransform: 'capitalize',
+                            minWidth: '80px',
+                            textAlign: 'right'
+                          }}>
+                            {item.status}
+                          </span>
+                          <Button variant="ghost" size="sm" style={{ 
+                            width: '40px',
+                            height: '32px',
+                            padding: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <Eye style={{ width: '1rem', height: '1rem' }} />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           </div>
         )}
 
         {/* Reports Tab */}
         {activeTab === 'reports' && (
-          <div style={{
-            backgroundColor: '#ffffff',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            border: '1px solid #fecaca'
-          }}>
-            <h3 style={{
-              margin: '0 0 1.5rem 0',
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#dc2626'
+          <div className="compliance-tab-content">
+            <div className="compliance-card" style={{
+              backgroundColor: '#ffffff',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              border: '1px solid #fecaca',
+              minHeight: '600px'
             }}>
-              Compliance Reports
-            </h3>
+              <h3 style={{
+                margin: '0 0 1.5rem 0',
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                color: '#dc2626',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                Compliance Reports
+              </h3>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '1.5rem'
-            }}>
-              {[
-                {
-                  title: 'Monthly Compliance Summary',
-                  description: 'Comprehensive overview of all compliance activities',
-                  type: 'PDF',
-                  size: '2.1 MB'
-                },
-                {
-                  title: 'Audit Trail Report',
-                  description: 'Detailed audit history and findings',
-                  type: 'Excel',
-                  size: '1.8 MB'
-                },
-                {
-                  title: 'Regulatory Changes Update',
-                  description: 'Latest regulatory changes affecting pharmacy operations',
-                  type: 'PDF',
-                  size: '3.2 MB'
-                }
-              ].map((report, index) => (
-                <div key={index} style={{
-                  padding: '1.5rem',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px'
-                }}>
-                  <div style={{
+              <div className="compliance-card-content" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '1.5rem',
+                maxHeight: '520px',
+                overflowY: 'auto',
+                paddingRight: '0.5rem'
+              }}>
+                {[
+                  {
+                    title: 'Monthly Compliance Summary',
+                    description: 'Comprehensive overview of all compliance activities',
+                    type: 'PDF',
+                    size: '2.1 MB'
+                  },
+                  {
+                    title: 'Audit Trail Report',
+                    description: 'Detailed audit history and findings',
+                    type: 'Excel',
+                    size: '1.8 MB'
+                  },
+                  {
+                    title: 'Regulatory Changes Update',
+                    description: 'Latest regulatory changes affecting pharmacy operations',
+                    type: 'PDF',
+                    size: '3.2 MB'
+                  }
+                ].map((report, index) => (
+                  <div key={index} style={{
+                    padding: '1.5rem',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    height: '200px',
                     display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    marginBottom: '1rem'
+                    flexDirection: 'column'
                   }}>
-                    <FileText style={{ width: '1.5rem', height: '1.5rem', color: '#dc2626' }} />
-                    <span style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      backgroundColor: '#f3f4f6',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px'
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      marginBottom: '1rem',
+                      height: '40px'
                     }}>
-                      {report.type}
-                    </span>
-                  </div>
-                  
-                  <h4 style={{
-                    margin: '0 0 0.5rem 0',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: '#111827'
-                  }}>
-                    {report.title}
-                  </h4>
-                  
-                  <p style={{
-                    margin: '0 0 1rem 0',
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    lineHeight: 1.5
-                  }}>
-                    {report.description}
-                  </p>
-                  
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}>
-                    <span style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280'
+                      <FileText style={{ 
+                        width: '1.5rem', 
+                        height: '1.5rem', 
+                        color: '#dc2626',
+                        flexShrink: 0
+                      }} />
+                      <span style={{
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        backgroundColor: '#f3f4f6',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        flexShrink: 0
+                      }}>
+                        {report.type}
+                      </span>
+                    </div>
+                    
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <h4 style={{
+                        margin: '0 0 0.5rem 0',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        color: '#111827',
+                        height: '48px',
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical'
+                      }}>
+                        {report.title}
+                      </h4>
+                      
+                      <p style={{
+                        margin: '0 0 1rem 0',
+                        fontSize: '0.875rem',
+                        color: '#6b7280',
+                        lineHeight: 1.4,
+                        flex: 1,
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical'
+                      }}>
+                        {report.description}
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      height: '40px',
+                      marginTop: 'auto'
                     }}>
-                      {report.size}
-                    </span>
-                    <Button 
-                      variant="secondary" 
-                      size="sm"
-                      onClick={() => handleDownloadReport(index)}
-                      loading={loading}
-                    >
-                      <Download style={{ width: '1rem', height: '1rem' }} />
-                      Download
-                    </Button>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        color: '#6b7280'
+                      }}>
+                        {report.size}
+                      </span>
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        onClick={() => handleDownloadReport(index)}
+                        loading={loading}
+                        style={{ 
+                          height: '32px',
+                          minWidth: '100px'
+                        }}
+                      >
+                        <Download style={{ width: '1rem', height: '1rem' }} />
+                        Download
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}
       </div>
     </div>
+  </div>
   )
 }
 
