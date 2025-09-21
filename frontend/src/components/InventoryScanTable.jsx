@@ -157,84 +157,6 @@ const InventoryScanTable = () => {
     }
   }
 
-  // Export scan data to CSV
-  const exportToCSV = () => {
-    if (!scanData || !scanData.all_inventory) {
-      toast.error('No scan data available to export')
-      return
-    }
-
-    try {
-      // Define CSV headers
-      const headers = [
-        'Drug Name',
-        'NDC',
-        'Strength',
-        'Current Stock',
-        'Compliance Status',
-        'Alert Level',
-        'FDA Shortage Status', 
-        'Recall Status',
-        'Recall Details',
-        'Days of Supply',
-        'Reorder Point',
-        'Last Updated'
-      ]
-
-      // Convert scan data to CSV rows
-      const csvRows = [
-        headers.join(','), // Header row
-        ...scanData.all_inventory.map(item => {
-          // Escape commas and quotes in text fields
-          const escapeCsvValue = (value) => {
-            if (value === null || value === undefined) return ''
-            const stringValue = String(value)
-            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-              return `"${stringValue.replace(/"/g, '""')}"`
-            }
-            return stringValue
-          }
-
-          return [
-            escapeCsvValue(item.drug_name || ''),
-            escapeCsvValue(item.ndc || ''),
-            escapeCsvValue(item.strength || ''),
-            escapeCsvValue(item.current_stock || ''),
-            escapeCsvValue(item.compliance_status || ''),
-            escapeCsvValue(item.alert_level || ''),
-            escapeCsvValue(item.fda_shortage_status || ''),
-            escapeCsvValue(item.recall_status || ''),
-            escapeCsvValue(item.recall_details || ''),
-            escapeCsvValue(item.days_of_supply || ''),
-            escapeCsvValue(item.reorder_point || ''),
-            escapeCsvValue(new Date().toISOString().split('T')[0])
-          ].join(',')
-        })
-      ]
-
-      // Create CSV content
-      const csvContent = csvRows.join('\n')
-
-      // Create and download file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      
-      link.setAttribute('href', url)
-      link.setAttribute('download', `compliance_scan_${new Date().toISOString().split('T')[0]}.csv`)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      toast.success(`📄 Compliance data exported successfully! ${scanData.all_inventory.length} records exported.`)
-      
-    } catch (error) {
-      console.error('Error exporting to CSV:', error)
-      toast.error('Failed to export compliance data')
-    }
-  }
-
   // Fetch AI recommendations for a specific drug
   const fetchAIRecommendations = async (drugItem) => {
     setLoadingAI(true)
@@ -484,35 +406,6 @@ const InventoryScanTable = () => {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {scanData && (
               <>
-                <button
-                  onClick={exportToCSV}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.375rem',
-                    padding: '0.75rem 1rem',
-                    backgroundColor: '#059669',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#047857'
-                    e.target.style.transform = 'translateY(-1px)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = '#059669'
-                    e.target.style.transform = 'translateY(0)'
-                  }}
-                >
-                  <Download style={{ width: '0.875rem', height: '0.875rem' }} />
-                  Export CSV
-                </button>
-                
                 <button
                   onClick={clearScanData}
                   style={{

@@ -1,7 +1,7 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
   text-align: center;
   background-color: #f9fafb;
 }
@@ -26,12 +26,15 @@
   border-bottom: 2px solid #fecaca;
   box-shadow: 0 1px 3px 0 rgba(220, 38, 38, 0.1), 0 1px 2px 0 rgba(220, 38, 38, 0.06);
   position: sticky;
-  top: 0;
+  top: 0.5rem;
   z-index: 1000;
+  margin: 0.5rem 1rem;
+  border-radius: 16px;
+  border: 2px solid #fecaca;
 }
 
 .navbar-container {
-  width: 90%;
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
   display: flex;
@@ -1692,6 +1695,11 @@ input:checked + .toggle-slider:before {
     padding: 0 1rem;
   }
 
+  .navbar {
+    margin: 0.5rem;
+    border-radius: 12px;
+  }
+
   .brand-text h1 {
     font-size: 1.25rem;
   }
@@ -2114,6 +2122,11 @@ input:checked + .toggle-slider:before {
     padding: 0 0.75rem;
   }
 
+  .navbar {
+    margin: 0.25rem;
+    border-radius: 10px;
+  }
+
   .brand-text h1 {
     font-size: 1.125rem;
   }
@@ -2297,6 +2310,11 @@ input:checked + .toggle-slider:before {
 
   .navbar-container {
     padding: 0 0.5rem;
+  }
+
+  .navbar {
+    margin: 0.25rem;
+    border-radius: 8px;
   }
 
   .dashboard {
