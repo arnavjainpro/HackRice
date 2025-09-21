@@ -21,13 +21,31 @@ from api.supabase_retriever import SupabaseRetriever
 from api.webscraper import scrape_fda_shortages_as_dataframe
 from api.recall import FDARecallRetriever
 from api.inventory_checker import InventoryChecker
-from api.aiResponses import AIRecommendationEngine
+from api.aiResponses import AiAlternativeFinder
 
 logger = logging.getLogger("uvicorn")
 app = FastAPI(title="RxBridge Backend", version="1.0.0")
 
-# Initialize AI recommendation engine
-ai_engine = AIRecommendationEngine()
+# Initialize AI system at startup
+ai_finder = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize AI system on startup"""
+    global ai_finder
+    try:
+        # Get Supabase credentials
+        supabase_url = os.getenv('VITE_SUPABASE_URL') or os.getenv('SUPABASE_URL')
+        supabase_key = os.getenv('VITE_SUPABASE_ANON_KEY') or os.getenv('SUPABASE_KEY')
+        
+        if supabase_url and supabase_key:
+            supabase_retriever = SupabaseRetriever(url=supabase_url, key=supabase_key)
+            ai_finder = AiAlternativeFinder(supabase_retriever=supabase_retriever)
+            logger.info("AI system initialized successfully")
+        else:
+            logger.warning("AI system not initialized - missing Supabase credentials")
+    except Exception as e:
+        logger.error(f"Failed to initialize AI system: {e}")
 
 # Pydantic models
 class AIRecommendationRequest(BaseModel):
@@ -134,42 +152,99 @@ def run_inventory_check():
 
 
 @app.post("/ai-recommendations")
-async def get_ai_recommendations(request: AIRecommendationRequest):
+def get_ai_recommendations(request: AIRecommendationRequest):
     """
     Generate AI-powered recommendations for flagged medications
     Returns a simplified response with alternative medications and descriptions
     """
-    try:
-        logger.info(f"Generating AI recommendations for: {request.drug_name}")
-        
-        # Mock response for now - replace with actual AI logic later
-        mock_response = {
-            "alt1": "Lisinopril 5mg",
-            "d1": "Lower dose alternative with similar efficacy. Monitor blood pressure closely during transition.",
-            "alt2": "Enalapril 10mg", 
-            "d2": "ACE inhibitor with similar mechanism of action. May have fewer side effects for some patients.",
-            "alt3": "Losartan 50mg",
-            "d3": "ARB alternative that works differently but achieves similar blood pressure control.",
-            "email": "Contact your prescribing physician at physician@hospital.com for medication adjustment guidance."
-        }
-        
-        # For some drugs, simulate no alternatives available
-        if "unavailable" in request.drug_name.lower():
-            mock_response = {
+    global ai_finder
+    
+    if not ai_finder:
+        # Try to initialize AI system if not already done
+        try:
+            supabase_url = os.getenv('VITE_SUPABASE_URL') or os.getenv('SUPABASE_URL')
+            supabase_key = os.getenv('VITE_SUPABASE_ANON_KEY') or os.getenv('SUPABASE_KEY')
+            
+            if not supabase_url or not supabase_key:
+                raise HTTPException(status_code=500, detail="Supabase credentials not found in env.")
+            
+            supabase_retriever = SupabaseRetriever(url=supabase_url, key=supabase_key)
+            ai_finder = AiAlternativeFinder(supabase_retriever=supabase_retriever)
+            logger.info("AI system initialized on demand")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize AI system: {e}")
+            return JSONResponse(content={
                 "alt1": None,
                 "d1": None,
                 "alt2": None,
                 "d2": None,
                 "alt3": None,
                 "d3": None,
-                "email": "No alternative medications currently available. Contact emergency supplier at emergency@pharmacy.com"
-            }
+                "email": f"AI system unavailable: {str(e)}"
+            })
+    
+    try:
+        logger.info(f"Generating AI recommendations for: {request.drug_name}")
         
-        return JSONResponse(content=mock_response)
+        # Create drug alert data for the AI system
+        drug_alert_data = {
+            'drug_name': request.drug_name,
+            'alert_level': 'RED',  # Default for now
+            'fda_status': 'Shortage/Recall'
+        }
+        
+        # Get AI recommendations using the real system
+        result = ai_finder.process_drug_alert(drug_alert_data)
+        
+        if result['status'] == 'error':
+            return JSONResponse(content={
+                "alt1": None,
+                "d1": None,
+                "alt2": None,
+                "d2": None,
+                "alt3": None,
+                "d3": None,
+                "email": f"Error generating recommendations: {result.get('error', 'Unknown error')}"
+            })
+        
+        # Extract alternatives from the result
+        alternatives = result.get('suggested_alternatives', [])
+        email_draft = result.get('email_draft', '')
+        
+        # Format response to match the expected structure
+        response = {
+            "alt1": None,
+            "d1": None,
+            "alt2": None,
+            "d2": None,
+            "alt3": None,
+            "d3": None,
+            "email": email_draft if email_draft else "Contact your prescribing physician for guidance on medication alternatives."
+        }
+        
+        # Fill in alternatives and create descriptions
+        for i, alt in enumerate(alternatives[:3]):  # Take up to 3 alternatives
+            alt_key = f"alt{i+1}"
+            desc_key = f"d{i+1}"
+            
+            response[alt_key] = alt['name']
+            response[desc_key] = f"Alternative with {alt['days_of_supply']} days supply ({alt['stock']} units in stock). Match type: {alt.get('match_type', 'unknown')}."
+        
+        # If no alternatives found, set appropriate message
+        if not alternatives:
+            response["email"] = "No suitable alternatives with adequate supply currently available. Contact emergency supplier or prescribing physician for guidance."
+        
+        return JSONResponse(content=response)
         
     except Exception as e:
         logger.exception(f"Failed to generate AI recommendations for {request.drug_name}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Failed to generate AI recommendations: {str(e)}"
-        )
+        return JSONResponse(content={
+            "alt1": None,
+            "d1": None,
+            "alt2": None,
+            "d2": None,
+            "alt3": None,
+            "d3": None,
+            "email": f"System error: {str(e)}"
+        })
