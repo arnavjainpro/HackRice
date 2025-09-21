@@ -1,16 +1,78 @@
-import React, { useState } from 'react'
-import { Search, Filter, Package, TrendingDown, AlertTriangle, ChevronUp, ChevronDown, Info, X, RefreshCw, ShieldAlert, Scan, Clock } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Search, Filter, Package, TrendingDown, AlertTriangle, ChevronUp, ChevronDown, Info, X, RefreshCw, ShieldAlert, Scan, Clock, Brain, Lightbulb, Zap, Mail, Send, User, Phone, MessageSquare } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const InventoryScanTable = () => {
-  const [scanData, setScanData] = useState(null)
+  // Load initial scan data from localStorage
+  const [scanData, setScanData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rxbridge_scan_data')
+      return saved ? JSON.parse(saved) : null
+    } catch (error) {
+      console.error('Error loading scan data from localStorage:', error)
+      return null
+    }
+  })
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [filterConfig, setFilterConfig] = useState('all') // all, red, purple, yellow, blue
   const [loading, setLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
   const [showLegend, setShowLegend] = useState(false)
-  const [lastScanTime, setLastScanTime] = useState(null)
+  
+  // Load last scan time from localStorage
+  const [lastScanTime, setLastScanTime] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rxbridge_last_scan_time')
+      return saved ? new Date(saved) : null
+    } catch (error) {
+      console.error('Error loading last scan time from localStorage:', error)
+      return null
+    }
+  })
+  
+  // AI Recommendations Modal
+  const [showAIModal, setShowAIModal] = useState(false)
+  const [selectedDrug, setSelectedDrug] = useState(null)
+  const [aiRecommendations, setAiRecommendations] = useState(null)
+  const [loadingAI, setLoadingAI] = useState(false)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(25)
+  
+  // Track if current data is from cache vs fresh scan
+  const [isDataFromCache, setIsDataFromCache] = useState(false)
+
+  // Persist scan data to localStorage whenever it changes
+  useEffect(() => {
+    if (scanData) {
+      try {
+        localStorage.setItem('rxbridge_scan_data', JSON.stringify(scanData))
+      } catch (error) {
+        console.error('Error saving scan data to localStorage:', error)
+      }
+    }
+  }, [scanData])
+
+  // Persist last scan time to localStorage whenever it changes  
+  useEffect(() => {
+    if (lastScanTime) {
+      try {
+        localStorage.setItem('rxbridge_last_scan_time', lastScanTime.toISOString())
+      } catch (error) {
+        console.error('Error saving last scan time to localStorage:', error)
+      }
+    }
+  }, [lastScanTime])
+
+  // Set cache flag on component mount if data exists
+  useEffect(() => {
+    if (scanData && lastScanTime) {
+      setIsDataFromCache(true)
+    }
+  }, [])
 
   // Call the backend POST endpoint
   const performInventoryScan = async () => {
@@ -60,6 +122,7 @@ const InventoryScanTable = () => {
       if (data.status === 'success') {
         setScanData(data)
         setLastScanTime(new Date())
+        setIsDataFromCache(false) // Mark as fresh data
         setLoadingMessage('Scan completed successfully!')
         toast.success(`✅ Scan completed! Found ${data.summary.items_requiring_attention} items needing attention`)
       } else {
@@ -74,11 +137,69 @@ const InventoryScanTable = () => {
     }
   }
 
-  // Handle escape key to close modal
+  // Clear cached scan data
+  const clearScanData = () => {
+    try {
+      localStorage.removeItem('rxbridge_scan_data')
+      localStorage.removeItem('rxbridge_last_scan_time')
+      setScanData(null)
+      setLastScanTime(null)
+      setIsDataFromCache(false)
+      toast.success('🗑️ Scan data cleared successfully')
+    } catch (error) {
+      console.error('Error clearing scan data:', error)
+      toast.error('Failed to clear scan data')
+    }
+  }
+
+  // Fetch AI recommendations for a specific drug
+  const fetchAIRecommendations = async (drugItem) => {
+    setLoadingAI(true)
+    setSelectedDrug(drugItem)
+    setShowAIModal(true)
+    
+    try {
+      const response = await fetch('/ai-recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          drug_name: drugItem.drug_name,
+          flag: drugItem.flag
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setAiRecommendations(data)
+      
+    } catch (error) {
+      console.error('AI recommendations error:', error)
+      toast.error('Failed to get AI recommendations: ' + error.message)
+      setAiRecommendations({
+        alt1: null,
+        d1: 'Unable to load AI recommendations. Please try again.',
+        alt2: null,
+        d2: null,
+        alt3: null,
+        d3: null,
+        email: 'Please contact support for assistance.'
+      })
+    } finally {
+      setLoadingAI(false)
+    }
+  }
+
+  // Handle escape key to close modals
   React.useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
         setShowLegend(false)
+        setShowAIModal(false)
       }
     }
 
@@ -162,6 +283,21 @@ const InventoryScanTable = () => {
 
     return filtered
   }, [scanData, searchTerm, filterConfig, sortConfig])
+
+  // Pagination logic
+  const paginatedData = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredData.slice(startIndex, endIndex)
+  }, [filteredData, currentPage, itemsPerPage])
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterConfig])
 
   // Handle sorting
   const handleSort = (key) => {
@@ -260,20 +396,52 @@ const InventoryScanTable = () => {
             )}
           </div>
           
-          <button
-            onClick={performInventoryScan}
-            disabled={loading}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.5rem',
-              backgroundColor: loading ? '#9ca3af' : '#dc2626',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.875rem',
-              fontWeight: '500',
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {scanData && (
+              <button
+                onClick={clearScanData}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.375rem',
+                  padding: '0.75rem 1rem',
+                  backgroundColor: '#6b7280',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.75rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#4b5563'
+                  e.target.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#6b7280'
+                  e.target.style.transform = 'translateY(0)'
+                }}
+              >
+                <X style={{ width: '0.875rem', height: '0.875rem' }} />
+                Clear Data
+              </button>
+            )}
+            
+            <button
+              onClick={performInventoryScan}
+              disabled={loading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.5rem',
+                backgroundColor: loading ? '#9ca3af' : '#dc2626',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                fontWeight: '500',
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s ease'
             }}
@@ -300,6 +468,7 @@ const InventoryScanTable = () => {
               </>
             )}
           </button>
+          </div>
 
           {/* Loading message */}
           {loading && loadingMessage && (
@@ -518,11 +687,12 @@ const InventoryScanTable = () => {
 
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        {scanData && filteredData.length > 0 ? (
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse'
-          }}>
+        {scanData && paginatedData.length > 0 ? (
+          <>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse'
+            }}>
             <thead>
               <tr style={{
                 backgroundColor: '#f9fafb',
@@ -543,7 +713,7 @@ const InventoryScanTable = () => {
                   onClick={() => handleSort('drug_name')}
                   style={{
                     padding: '0.75rem 1rem',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: '600',
                     color: '#374151',
@@ -553,7 +723,7 @@ const InventoryScanTable = () => {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
                     Drug Name
                     {getSortIcon('drug_name') && React.createElement(getSortIcon('drug_name'), { 
                       style: { width: '0.75rem', height: '0.75rem' } 
@@ -564,7 +734,7 @@ const InventoryScanTable = () => {
                   onClick={() => handleSort('current_stock')}
                   style={{
                     padding: '0.75rem 1rem',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: '600',
                     color: '#374151',
@@ -574,7 +744,7 @@ const InventoryScanTable = () => {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
                     Current Stock
                     {getSortIcon('current_stock') && React.createElement(getSortIcon('current_stock'), { 
                       style: { width: '0.75rem', height: '0.75rem' } 
@@ -585,7 +755,7 @@ const InventoryScanTable = () => {
                   onClick={() => handleSort('average_daily_dispense')}
                   style={{
                     padding: '0.75rem 1rem',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: '600',
                     color: '#374151',
@@ -595,7 +765,7 @@ const InventoryScanTable = () => {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
                     Daily Usage
                     {getSortIcon('average_daily_dispense') && React.createElement(getSortIcon('average_daily_dispense'), { 
                       style: { width: '0.75rem', height: '0.75rem' } 
@@ -606,7 +776,7 @@ const InventoryScanTable = () => {
                   onClick={() => handleSort('days_of_supply')}
                   style={{
                     padding: '0.75rem 1rem',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: '600',
                     color: '#374151',
@@ -616,7 +786,7 @@ const InventoryScanTable = () => {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
                     Days Supply
                     {getSortIcon('days_of_supply') && React.createElement(getSortIcon('days_of_supply'), { 
                       style: { width: '0.75rem', height: '0.75rem' } 
@@ -625,7 +795,7 @@ const InventoryScanTable = () => {
                 </th>
                 <th style={{
                   padding: '0.75rem 1rem',
-                  textAlign: 'left',
+                  textAlign: 'center',
                   fontSize: '0.75rem',
                   fontWeight: '600',
                   color: '#374151',
@@ -636,19 +806,19 @@ const InventoryScanTable = () => {
                 </th>
                 <th style={{
                   padding: '0.75rem 1rem',
-                  textAlign: 'left',
+                  textAlign: 'center',
                   fontSize: '0.75rem',
                   fontWeight: '600',
                   color: '#374151',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em'
                 }}>
-                  Details
+                  AI Recommendations
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((item) => {
+              {paginatedData.map((item) => {
                 const StatusIcon = getStatusIcon(item.alert_level)
                 
                 return (
@@ -661,12 +831,14 @@ const InventoryScanTable = () => {
                   >
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.5rem',
+                        justifyContent: 'center'
                       }}>
                         <StatusIcon 
                           style={{ 
@@ -687,7 +859,8 @@ const InventoryScanTable = () => {
                     <td style={{
                       padding: '1rem',
                       verticalAlign: 'middle',
-                      maxWidth: '300px'
+                      maxWidth: '300px',
+                      textAlign: 'center'
                     }}>
                       <p style={{
                         margin: 0,
@@ -717,7 +890,8 @@ const InventoryScanTable = () => {
                     </td>
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <span style={{
                         fontSize: '0.875rem',
@@ -729,7 +903,8 @@ const InventoryScanTable = () => {
                     </td>
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <span style={{
                         fontSize: '0.875rem',
@@ -740,7 +915,8 @@ const InventoryScanTable = () => {
                     </td>
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <span style={{
                         fontSize: '0.875rem',
@@ -752,7 +928,8 @@ const InventoryScanTable = () => {
                     </td>
                     <td style={{
                       padding: '1rem',
-                      verticalAlign: 'middle'
+                      verticalAlign: 'middle',
+                      textAlign: 'center'
                     }}>
                       <span style={{
                         fontSize: '0.75rem',
@@ -768,30 +945,37 @@ const InventoryScanTable = () => {
                     <td style={{
                       padding: '1rem',
                       verticalAlign: 'middle',
-                      maxWidth: '200px'
+                      textAlign: 'center'
                     }}>
-                      {item.recall_reason && (
-                        <>
-                          <div style={{
+                      {item.alert_level !== 'BLUE' && (
+                        <button
+                          onClick={() => fetchAIRecommendations(item)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.375rem',
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: '#3b82f6',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '6px',
                             fontSize: '0.75rem',
-                            color: '#dc2626',
                             fontWeight: '500',
-                            marginBottom: '0.25rem'
-                          }}>
-                            {item.recall_classification}
-                          </div>
-                          <div style={{
-                            fontSize: '0.75rem',
-                            color: '#374151',
-                            lineHeight: 1.3,
-                            wordBreak: 'break-word'
-                          }}>
-                            {item.recall_reason.length > 100 
-                              ? `${item.recall_reason.substring(0, 100)}...`
-                              : item.recall_reason
-                            }
-                          </div>
-                        </>
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = '#2563eb'
+                            e.target.style.transform = 'translateY(-1px)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = '#3b82f6'
+                            e.target.style.transform = 'translateY(0)'
+                          }}
+                        >
+                          <Brain style={{ width: '0.875rem', height: '0.875rem' }} />
+                          Get AI Help
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -799,6 +983,150 @@ const InventoryScanTable = () => {
               })}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          {filteredData.length > itemsPerPage && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '1rem 1.5rem',
+              borderTop: '1px solid #e5e7eb',
+              backgroundColor: '#f9fafb'
+            }}>
+              {/* Results Info */}
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#6b7280'
+              }}>
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} results
+              </div>
+
+              {/* Pagination Buttons */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                {/* Previous Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: currentPage === 1 ? '#f3f4f6' : '#ffffff',
+                    color: currentPage === 1 ? '#9ca3af' : '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== 1) {
+                      e.target.style.backgroundColor = '#f3f4f6'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== 1) {
+                      e.target.style.backgroundColor = '#ffffff'
+                    }
+                  }}
+                >
+                  Previous
+                </button>
+
+                {/* Page Numbers */}
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  {Array.from({ length: totalPages }, (_, index) => {
+                    const pageNumber = index + 1
+                    const isCurrentPage = pageNumber === currentPage
+                    
+                    // Show first page, last page, current page, and pages around current page
+                    if (
+                      pageNumber === 1 ||
+                      pageNumber === totalPages ||
+                      (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => setCurrentPage(pageNumber)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: isCurrentPage ? '#3b82f6' : '#ffffff',
+                            color: isCurrentPage ? '#ffffff' : '#374151',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            fontSize: '0.875rem',
+                            fontWeight: isCurrentPage ? '600' : '400',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            minWidth: '2.5rem'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isCurrentPage) {
+                              e.target.style.backgroundColor = '#f3f4f6'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isCurrentPage) {
+                              e.target.style.backgroundColor = '#ffffff'
+                            }
+                          }}
+                        >
+                          {pageNumber}
+                        </button>
+                      )
+                    } else if (
+                      (pageNumber === currentPage - 2 && currentPage > 3) ||
+                      (pageNumber === currentPage + 2 && currentPage < totalPages - 2)
+                    ) {
+                      return (
+                        <span key={pageNumber} style={{
+                          padding: '0.5rem 0.25rem',
+                          color: '#9ca3af',
+                          fontSize: '0.875rem'
+                        }}>
+                          ...
+                        </span>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: currentPage === totalPages ? '#f3f4f6' : '#ffffff',
+                    color: currentPage === totalPages ? '#9ca3af' : '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== totalPages) {
+                      e.target.style.backgroundColor = '#f3f4f6'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== totalPages) {
+                      e.target.style.backgroundColor = '#ffffff'
+                    }
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         ) : scanData ? (
           <div style={{
             padding: '2rem',
@@ -1033,6 +1361,404 @@ const InventoryScanTable = () => {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Recommendations Modal */}
+      {showAIModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            maxWidth: '700px',
+            width: '100%',
+            maxHeight: '85vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '2rem 2rem 1rem 2rem',
+              borderBottom: '1px solid #f1f5f9',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ flex: 1 }}>
+                <h1 style={{
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: '#1e293b',
+                  letterSpacing: '-0.025em'
+                }}>
+                  AI Recommendation for {selectedDrug?.drug_name}
+                </h1>
+                <button
+                  onClick={() => setShowAIModal(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    right: '1.5rem',
+                    padding: '0.5rem',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#64748b',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f1f5f9'
+                    e.target.style.color = '#334155'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent'
+                    e.target.style.color = '#64748b'
+                  }}
+                >
+                  <X style={{ width: '1.25rem', height: '1.25rem' }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '1.5rem 2rem 2rem 2rem'
+            }}>
+              {loadingAI ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '3rem 1rem',
+                  textAlign: 'center'
+                }}>
+                  <RefreshCw style={{ 
+                    width: '2.5rem', 
+                    height: '2.5rem', 
+                    color: '#3b82f6',
+                    animation: 'spin 1s linear infinite',
+                    marginBottom: '1rem'
+                  }} />
+                  <h3 style={{ margin: '0 0 0.5rem 0', color: '#1e293b', fontWeight: '600' }}>
+                    Generating AI Recommendations
+                  </h3>
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '0.875rem' }}>
+                    Analyzing drug data and compliance requirements...
+                  </p>
+                </div>
+              ) : aiRecommendations ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  
+                  {/* Current Alert Section */}
+                  <div style={{
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    padding: '1.25rem'
+                  }}>
+                    <h3 style={{
+                      margin: '0 0 1rem 0',
+                      fontSize: '1.125rem',
+                      fontWeight: '600',
+                      color: '#334155'
+                    }}>
+                      Current Alert
+                    </h3>
+                    
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '0.75rem'
+                    }}>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#64748b'
+                      }}>
+                        Severity:
+                      </span>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: selectedDrug?.alert_level === 'RED' ? '#dc2626' : 
+                               selectedDrug?.alert_level === 'PURPLE' ? '#7c3aed' :
+                               selectedDrug?.alert_level === 'YELLOW' ? '#d97706' : '#0891b2',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        {selectedDrug?.alert_level === 'RED' ? 'CRITICAL' : 
+                         selectedDrug?.alert_level === 'PURPLE' ? 'RECALLED' :
+                         selectedDrug?.alert_level === 'YELLOW' ? 'SHORTAGE' : 'AWARENESS'}
+                      </span>
+                    </div>
+                    
+                    <p style={{
+                      margin: 0,
+                      fontSize: '0.875rem',
+                      color: '#475569',
+                      lineHeight: 1.5
+                    }}>
+                      {selectedDrug?.alert_level === 'RED' ? 'Critical shortage - Immediate action required' :
+                       selectedDrug?.alert_level === 'PURPLE' ? 'Product recalled - Stop dispensing immediately' :
+                       selectedDrug?.alert_level === 'YELLOW' ? 'Supply shortage detected - Monitor closely' :
+                       `Low stock warning - ${selectedDrug?.days_of_supply || 0} days of supply remaining`}
+                    </p>
+                  </div>
+
+                  {/* AI Recommendation Section */}
+                  <div style={{
+                    backgroundColor: '#f0f9ff',
+                    border: '1px solid #0ea5e9',
+                    borderRadius: '12px',
+                    padding: '1.25rem'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <Lightbulb style={{ width: '1.125rem', height: '1.125rem', color: '#0369a1' }} />
+                      <h3 style={{
+                        margin: 0,
+                        fontSize: '1.125rem',
+                        fontWeight: '600',
+                        color: '#0369a1'
+                      }}>
+                        AI Recommendations
+                      </h3>
+                    </div>
+
+                    {/* Alternative Medications */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {aiRecommendations.alt1 && (
+                        <div style={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e0f2fe',
+                          borderRadius: '8px',
+                          padding: '1rem'
+                        }}>
+                          <h4 style={{
+                            margin: '0 0 0.5rem 0',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#1e293b'
+                          }}>
+                            Alternative 1: {aiRecommendations.alt1}
+                          </h4>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: '#475569',
+                            lineHeight: 1.5
+                          }}>
+                            {aiRecommendations.d1}
+                          </p>
+                        </div>
+                      )}
+
+                      {aiRecommendations.alt2 && (
+                        <div style={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e0f2fe',
+                          borderRadius: '8px',
+                          padding: '1rem'
+                        }}>
+                          <h4 style={{
+                            margin: '0 0 0.5rem 0',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#1e293b'
+                          }}>
+                            Alternative 2: {aiRecommendations.alt2}
+                          </h4>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: '#475569',
+                            lineHeight: 1.5
+                          }}>
+                            {aiRecommendations.d2}
+                          </p>
+                        </div>
+                      )}
+
+                      {aiRecommendations.alt3 && (
+                        <div style={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e0f2fe',
+                          borderRadius: '8px',
+                          padding: '1rem'
+                        }}>
+                          <h4 style={{
+                            margin: '0 0 0.5rem 0',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#1e293b'
+                          }}>
+                            Alternative 3: {aiRecommendations.alt3}
+                          </h4>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: '#475569',
+                            lineHeight: 1.5
+                          }}>
+                            {aiRecommendations.d3}
+                          </p>
+                        </div>
+                      )}
+
+                      {!aiRecommendations.alt1 && !aiRecommendations.alt2 && !aiRecommendations.alt3 && (
+                        <div style={{
+                          backgroundColor: '#fef3c7',
+                          border: '1px solid #fbbf24',
+                          borderRadius: '8px',
+                          padding: '1rem',
+                          textAlign: 'center'
+                        }}>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '0.875rem',
+                            color: '#92400e',
+                            fontWeight: '500'
+                          }}>
+                            No alternative medications currently available.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Contact Information */}
+                    {aiRecommendations.email && (
+                      <div style={{
+                        marginTop: '1.5rem',
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '1rem'
+                      }}>
+                        <h4 style={{
+                          margin: '0 0 0.5rem 0',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: '#334155'
+                        }}>
+                          Contact Information:
+                        </h4>
+                        <p style={{
+                          margin: 0,
+                          fontSize: '0.875rem',
+                          color: '#475569',
+                          lineHeight: 1.5
+                        }}>
+                          {aiRecommendations.email}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: '#64748b'
+                }}>
+                  <AlertTriangle style={{ width: '2rem', height: '2rem', marginBottom: '1rem' }} />
+                  <p style={{ margin: 0, fontSize: '0.875rem' }}>
+                    Failed to load AI recommendations. Please try again.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer with Action Buttons */}
+            {!loadingAI && aiRecommendations && (
+              <div style={{
+                padding: '1.5rem 2rem',
+                borderTop: '1px solid #f1f5f9',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '1rem'
+              }}>
+                <button
+                  onClick={() => setShowAIModal(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#f8fafc',
+                    color: '#64748b',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f1f5f9'
+                    e.target.style.borderColor = '#cbd5e1'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#f8fafc'
+                    e.target.style.borderColor = '#e2e8f0'
+                  }}
+                >
+                  Close
+                </button>
+
+                <button
+                  onClick={() => {
+                    toast.success('Email communication feature coming soon!')
+                    // TODO: Implement email functionality
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#b91c1c'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#dc2626'}
+                >
+                  <Send style={{ width: '1rem', height: '1rem' }} />
+                  Generate Communication
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
