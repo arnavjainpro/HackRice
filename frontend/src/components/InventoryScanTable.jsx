@@ -129,7 +129,7 @@ const InventoryScanTable = () => {
         setLastScanTime(new Date())
         setIsDataFromCache(false) // Mark as fresh data
         setLoadingMessage('Scan completed successfully!')
-        toast.success(`✅ Scan completed! Found ${data.summary.items_requiring_attention} items needing attention`)
+        toast.success(`Scan completed! Found ${data.summary.items_requiring_attention} items needing attention`)
       } else {
         toast.error('❌ Scan failed: ' + (data.message || 'Unknown error'))
       }
