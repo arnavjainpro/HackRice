@@ -20,12 +20,6 @@ const Dashboard = () => {
           <h1>RxBridge Dashboard</h1>
           <p>Comprehensive Inventory Compliance & FDA Recall Management</p>
         </div>
-        <div className="dashboard-meta">
-          <div className="status-indicator online">
-            <span className="status-dot"></span>
-            System Online
-          </div>
-        </div>
       </div>
 
       <main className="dashboard-main">

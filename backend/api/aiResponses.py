@@ -1,301 +1,309 @@
-"""
-AI-Powered Drug Recommendations System
-Generates intelligent recommendations for flagged medications
-"""
-
+import os
+import pandas as pd
+import json
 import logging
-from typing import Dict, List, Any
-from datetime import datetime
+from typing import List, Dict, Any
+
+import google.generativeai as genai
+from api.supabase_retriever import SupabaseRetriever
 
 logger = logging.getLogger(__name__)
 
-class AIRecommendationEngine:
+class AiAlternativeFinder:
     """
-    Generates AI-powered recommendations for pharmacy compliance issues
+    A class to handle all AI-powered logic for finding and validating drug alternatives.
+    Fixed version with proper error handling and Supabase compatibility.
     """
-    
-    def __init__(self):
-        """Initialize the AI recommendation engine"""
-        self.risk_levels = {
-            'RED': 'CRITICAL',
-            'PURPLE': 'HIGH', 
-            'YELLOW': 'MODERATE',
-            'BLUE': 'LOW'
-        }
-        
-        self.recall_classifications = {
-            'Class I': 'Life-threatening situation - immediate action required',
-            'Class II': 'Temporary or reversible health consequences - prompt action needed', 
-            'Class III': 'Remote possibility of adverse health consequences - monitor closely'
-        }
 
-    def generate_recommendations(
-        self,
-        drug_name: str,
-        alert_level: str,
-        status: str = '',
-        stock: int = 0,
-        days_supply: float = 0,
-        reason: str = '',
-        classification: str = ''
-    ) -> Dict[str, Any]:
+    def __init__(self, supabase_retriever: SupabaseRetriever):
         """
-        Generate comprehensive AI recommendations for a flagged drug
+        Initializes the AI client and the database retriever.
+        """
+        if 'GEMINI_API_KEY' not in os.environ:
+            raise ValueError("GEMINI_API_KEY environment variable not set.")
         
-        Args:
-            drug_name: Name of the medication
-            alert_level: Alert level (RED, PURPLE, YELLOW, BLUE)
-            status: FDA status (Recalled, Currently in Shortage, etc.)
-            stock: Current stock level
-            days_supply: Days of supply remaining
-            reason: Reason for recall/shortage
-            classification: FDA classification (Class I, II, III)
-            
-        Returns:
-            Dictionary with AI recommendations
+        genai.configure(api_key=os.environ['GEMINI_API_KEY'])
+        self.model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        self.supabase_retriever = supabase_retriever
+
+    def _generate_alternatives_from_ai(self, drug_names: List[str]) -> Dict[str, List[str]]:
+        """
+        Makes a single call to Gemini API to get therapeutic alternatives.
+        """
+        if not drug_names:
+            return {}
+
+        drug_list_str = ", ".join(drug_names)
+        
+        prompt = f"""
+        You are an expert pharmacist. Provide 2-3 common FDA-approved therapeutic alternatives for each medication.
+
+        Example format:
+        DRUG: Atorvastatin 20mg
+        Alternative 1: Rosuvastatin 10mg
+        Alternative 2: Simvastatin 40mg
+
+        Now provide alternatives for: {drug_list_str}
+
+        Format your response EXACTLY as:
+        DRUG: [Original Drug Name]
+        Alternative 1: [Substitute Name]
+        Alternative 2: [Substitute Name]
+        Alternative 3: [Substitute Name]
+
+        Separate each drug with a blank line.
+        """
+
+        try:
+            response = self.model.generate_content(prompt)
+            return self._parse_ai_response(response.text)
+        except Exception as e:
+            logger.error(f"Error calling Gemini API: {e}")
+            return {}
+
+    def _parse_ai_response(self, response_text: str) -> Dict[str, List[str]]:
+        """
+        Parse the AI response into a structured dictionary.
+        """
+        parsed_alternatives = {}
+        current_drug = None
+        
+        for line in response_text.strip().split('\n'):
+            line = line.strip()
+            if line.startswith('DRUG:'):
+                current_drug = line.replace('DRUG:', '').strip()
+                parsed_alternatives[current_drug] = []
+            elif line.startswith('Alternative') and current_drug:
+                try:
+                    alt_name = line.split(':', 1)[1].strip()
+                    parsed_alternatives[current_drug].append(alt_name)
+                except IndexError:
+                    continue
+        
+        return parsed_alternatives
+
+    def _get_all_inventory(self) -> pd.DataFrame:
+        """
+        Get all inventory data from Supabase (more reliable than filtering).
         """
         try:
-            logger.info(f"Generating AI recommendations for {drug_name} (Alert: {alert_level})")
+            return self.supabase_retriever.get_pharmacy_inventory()
+        except Exception as e:
+            logger.error(f"Error fetching inventory: {e}")
+            return pd.DataFrame()
+
+    def _find_alternatives_in_inventory(self, alternatives: List[str], inventory_df: pd.DataFrame) -> List[Dict[str, Any]]:
+        """
+        Find which alternatives are available in inventory using fuzzy matching.
+        """
+        if inventory_df.empty:
+            return []
+        
+        available_alternatives = []
+        
+        for alt_name in alternatives:
+            # Clean the alternative name for matching
+            alt_clean = alt_name.lower().strip()
             
-            # Base recommendation structure
-            recommendations = {
+            # Try exact match first
+            exact_match = inventory_df[inventory_df['drug_name'].str.lower().str.strip() == alt_clean]
+            
+            if not exact_match.empty:
+                match = exact_match.iloc[0]
+                available_alternatives.append({
+                    'name': match['drug_name'],
+                    'stock': int(match['stock']),
+                    'days_of_supply': round(match.get('days_of_supply', 0), 1),
+                    'match_type': 'exact'
+                })
+                continue
+            
+            # Try partial match
+            partial_matches = inventory_df[
+                inventory_df['drug_name'].str.lower().str.contains(
+                    alt_clean.split()[0], na=False, regex=False
+                )
+            ]
+            
+            if not partial_matches.empty:
+                # Take the first partial match
+                match = partial_matches.iloc[0]
+                available_alternatives.append({
+                    'name': match['drug_name'],
+                    'stock': int(match['stock']),
+                    'days_of_supply': round(match.get('days_of_supply', 0), 1),
+                    'match_type': 'partial'
+                })
+        
+        return available_alternatives
+
+    def find_and_validate_alternatives(self, drug_names_in_shortage: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Main method to find alternatives that are both AI-suggested and in stock.
+        """
+        # Step 1: Get AI suggestions
+        ai_suggestions = self._generate_alternatives_from_ai(drug_names_in_shortage)
+        if not ai_suggestions:
+            logger.warning("No AI suggestions received")
+            return {drug: [] for drug in drug_names_in_shortage}
+
+        # Step 2: Get all inventory data
+        inventory_df = self._get_all_inventory()
+        if inventory_df.empty:
+            logger.warning("No inventory data available")
+            return {drug: [] for drug in drug_names_in_shortage}
+
+        # Step 3: Find alternatives in inventory
+        final_validated_alternatives = {}
+        
+        for original_drug, suggested_alts in ai_suggestions.items():
+            available_alts = self._find_alternatives_in_inventory(suggested_alts, inventory_df)
+            
+            # Filter by business logic (>14 days supply)
+            valid_alts = [
+                alt for alt in available_alts 
+                if alt['days_of_supply'] > 14
+            ]
+            
+            final_validated_alternatives[original_drug] = valid_alts
+            
+        return final_validated_alternatives
+
+    def generate_communication_for_doctor(self, original_drug: str, validated_alternatives: List[Dict[str, Any]]) -> str:
+        """
+        Generate professional communication for the doctor.
+        """
+        if not validated_alternatives:
+            alternatives_text = "No suitable alternatives with adequate supply are currently in stock."
+        else:
+            alt_lines = [
+                f"- {alt['name']} ({alt['days_of_supply']} days supply, {alt['stock']} units)"
+                for alt in validated_alternatives
+            ]
+            alternatives_text = "The following in-stock therapeutic alternatives are available:\n" + "\n".join(alt_lines)
+
+        prompt = f"""
+        Draft a professional message from a pharmacy to a physician about a drug shortage.
+
+        Context:
+        - Drug in Shortage: {original_drug}
+        - Available Alternatives: {alternatives_text}
+
+        Create a brief, professional message that:
+        1. Notifies about the shortage
+        2. Lists available alternatives
+        3. Requests guidance on substitution
+
+        Keep it under 150 words and professional.
+        """
+        
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"Error generating communication: {e}")
+            return self._fallback_communication(original_drug, validated_alternatives)
+
+    def _fallback_communication(self, original_drug: str, validated_alternatives: List[Dict[str, Any]]) -> str:
+        """
+        Fallback communication template if AI fails.
+        """
+        message = f"Dear Dr. [Physician Name],\n\n"
+        message += f"We are writing to inform you of a shortage affecting {original_drug}.\n\n"
+        
+        if validated_alternatives:
+            message += "We have the following alternatives in stock:\n"
+            for alt in validated_alternatives:
+                message += f"- {alt['name']} ({alt['stock']} units available)\n"
+            message += "\nPlease advise on your preferred alternative for future prescriptions.\n\n"
+        else:
+            message += "We currently do not have suitable alternatives in stock but are working to source appropriate substitutions.\n\n"
+        
+        message += "Best regards,\n[Pharmacy Name]\n[Contact Information]"
+        return message
+
+    def process_drug_alert(self, drug_alert_data: Dict) -> Dict[str, Any]:
+        """
+        Main entry point for processing a single drug alert.
+        Returns complete response with alternatives and communication.
+        """
+        drug_name = drug_alert_data.get('drug_name', '')
+        
+        try:
+            # Find alternatives for this single drug
+            alternatives_result = self.find_and_validate_alternatives([drug_name])
+            validated_alternatives = alternatives_result.get(drug_name, [])
+            
+            # Generate communication
+            communication = self.generate_communication_for_doctor(drug_name, validated_alternatives)
+            
+            # Generate doctor information (this would normally come from a database)
+            doctor_info = self._get_doctor_info_for_drug(drug_name)
+            
+            return {
+                'status': 'success',
                 'drug_name': drug_name,
-                'alert_level': alert_level,
-                'risk_assessment': '',
-                'immediate_actions': [],
-                'alternatives': [],
-                'timeline': '',
-                'priority_score': self._calculate_priority_score(alert_level, classification, days_supply)
+                'alert_info': drug_alert_data,
+                'suggested_alternatives': validated_alternatives,
+                'email_draft': communication,
+                'doctor_info': doctor_info,
+                'alternatives_found': len(validated_alternatives)
             }
             
-            # Generate recommendations based on alert level
-            if alert_level == 'RED':
-                recommendations = self._generate_critical_recommendations(
-                    recommendations, drug_name, status, stock, days_supply, reason, classification
-                )
-            elif alert_level == 'PURPLE':
-                recommendations = self._generate_recall_recommendations(
-                    recommendations, drug_name, status, stock, days_supply, reason, classification
-                )
-            elif alert_level == 'YELLOW':
-                recommendations = self._generate_shortage_recommendations(
-                    recommendations, drug_name, status, stock, days_supply, reason
-                )
-            elif alert_level == 'BLUE':
-                recommendations = self._generate_monitoring_recommendations(
-                    recommendations, drug_name, stock, days_supply
-                )
-            
-            logger.info(f"Successfully generated recommendations for {drug_name}")
-            return recommendations
-            
         except Exception as e:
-            logger.error(f"Error generating AI recommendations for {drug_name}: {e}")
-            return self._get_fallback_recommendations(drug_name, alert_level)
+            logger.error(f"Error processing drug alert for {drug_name}: {e}")
+            return {
+                'status': 'error',
+                'drug_name': drug_name,
+                'error': str(e),
+                'suggested_alternatives': [],
+                'email_draft': '',
+                'doctor_info': self._get_default_doctor_info(),
+                'alternatives_found': 0
+            }
 
-    def _calculate_priority_score(self, alert_level: str, classification: str, days_supply: float) -> int:
-        """Calculate priority score (1-10, higher = more urgent)"""
-        score = 5  # Base score
-        
-        # Alert level impact
-        if alert_level == 'RED':
-            score += 3
-        elif alert_level == 'PURPLE':
-            score += 2
-        elif alert_level == 'YELLOW':
-            score += 1
-            
-        # Classification impact
-        if classification == 'Class I':
-            score += 2
-        elif classification == 'Class II':
-            score += 1
-            
-        # Days supply impact
-        if days_supply <= 7:
-            score += 2
-        elif days_supply <= 30:
-            score += 1
-            
-        return min(10, max(1, score))
-
-    def _generate_critical_recommendations(
-        self, rec: Dict, drug_name: str, status: str, stock: int, days_supply: float, reason: str, classification: str
-    ) -> Dict:
-        """Generate recommendations for critical (RED) alerts"""
-        
-        rec['risk_assessment'] = f"CRITICAL RISK: {drug_name} requires immediate attention due to {status.lower()}. Current supply of {days_supply:.1f} days may impact patient care."
-        
-        rec['immediate_actions'] = [
-            "🚨 STOP dispensing immediately until further review",
-            f"📞 Contact all patients who received this medication in the last 30 days",
-            "📋 Document all current inventory and lot numbers",
-            "🏥 Coordinate with clinical team for patient safety assessment",
-            "📧 Report to pharmacy supervisor and compliance officer within 2 hours"
-        ]
-        
-        if 'shortage' in status.lower():
-            rec['immediate_actions'].extend([
-                "🔍 Search for alternative suppliers immediately",
-                "💊 Identify therapeutic alternatives for new prescriptions",
-                "📦 Consider emergency drug procurement if clinically critical"
-            ])
-        
-        if classification == 'Class I':
-            rec['immediate_actions'].insert(1, "⚠️ This is a Class I recall - life-threatening risk to patients")
-        
-        rec['alternatives'] = self._get_drug_alternatives(drug_name)
-        rec['timeline'] = "IMMEDIATE - All actions must be completed within 2-4 hours"
-        
-        return rec
-
-    def _generate_recall_recommendations(
-        self, rec: Dict, drug_name: str, status: str, stock: int, days_supply: float, reason: str, classification: str
-    ) -> Dict:
-        """Generate recommendations for recalled (PURPLE) medications"""
-        
-        classification_desc = self.recall_classifications.get(classification, 'FDA recall')
-        rec['risk_assessment'] = f"HIGH RISK: {drug_name} has been recalled by the FDA. {classification_desc}. Current inventory should be quarantined."
-        
-        rec['immediate_actions'] = [
-            "🔒 Quarantine all affected inventory immediately",
-            "📋 Check lot numbers against FDA recall notice",
-            "🚫 Stop all dispensing of affected lots",
-            "📞 Contact patients who received recalled lots (if applicable)",
-            "📝 Complete FDA recall response documentation"
-        ]
-        
-        if classification == 'Class I':
-            rec['immediate_actions'].extend([
-                "🚨 Treat as medical emergency - contact patients within 24 hours",
-                "🏥 Coordinate with healthcare providers for patient monitoring"
-            ])
-        elif classification == 'Class II':
-            rec['immediate_actions'].append("📅 Contact affected patients within 48-72 hours")
-        
-        rec['alternatives'] = self._get_drug_alternatives(drug_name)
-        
-        if classification == 'Class I':
-            rec['timeline'] = "URGENT - Complete within 24 hours for Class I recall"
-        else:
-            rec['timeline'] = "HIGH PRIORITY - Complete within 48-72 hours"
-            
-        return rec
-
-    def _generate_shortage_recommendations(
-        self, rec: Dict, drug_name: str, status: str, stock: int, days_supply: float, reason: str
-    ) -> Dict:
-        """Generate recommendations for shortage (YELLOW) situations"""
-        
-        rec['risk_assessment'] = f"MODERATE RISK: {drug_name} is experiencing supply challenges. Current {days_supply:.1f} day supply requires proactive management."
-        
-        rec['immediate_actions'] = [
-            "📊 Audit current inventory levels and usage patterns",
-            "🔍 Contact alternative suppliers for availability",
-            "📋 Identify suitable therapeutic alternatives",
-            "📞 Notify prescribers of potential supply constraints"
-        ]
-        
-        if days_supply <= 14:
-            rec['immediate_actions'].extend([
-                "⏰ Implement conservative dispensing (10-14 day supplies)",
-                "🚀 Expedite orders from alternative sources"
-            ])
-        
-        if days_supply <= 7:
-            rec['immediate_actions'].extend([
-                "🚨 Activate emergency procurement procedures",
-                "💊 Begin transitioning patients to alternatives"
-            ])
-        
-        rec['alternatives'] = self._get_drug_alternatives(drug_name)
-        rec['timeline'] = f"Within 7-10 days (current supply: {days_supply:.1f} days)"
-        
-        return rec
-
-    def _generate_monitoring_recommendations(
-        self, rec: Dict, drug_name: str, stock: int, days_supply: float
-    ) -> Dict:
-        """Generate recommendations for monitoring (BLUE) situations"""
-        
-        rec['risk_assessment'] = f"LOW RISK: {drug_name} is showing early warning signs. Proactive monitoring recommended."
-        
-        rec['immediate_actions'] = [
-            "📈 Monitor inventory levels more closely",
-            "📊 Review usage trends and reorder points",
-            "🔍 Stay updated on FDA announcements for this medication"
-        ]
-        
-        if days_supply <= 30:
-            rec['immediate_actions'].append("📦 Consider increasing safety stock levels")
-        
-        rec['alternatives'] = ["Continue current management - no alternatives needed at this time"]
-        rec['timeline'] = "Monitor ongoing - review weekly"
-        
-        return rec
-
-    def _get_drug_alternatives(self, drug_name: str) -> List[str]:
+    def _get_doctor_info_for_drug(self, drug_name: str) -> Dict[str, str]:
         """
-        Get therapeutic alternatives for a drug
-        Note: In a real implementation, this would query a drug database
+        Get prescribing doctor information for a specific drug.
+        In a real system, this would query the prescription database.
         """
-        # Simplified alternative suggestions based on common drug patterns
-        alternatives = []
+        # This is mock data - in a real system, you'd query your prescription database
+        # to find which doctor prescribed this medication
+        mock_doctors = {
+            "Lidocaine Hydrochloride Injection": {
+                "name": "Dr. Sarah Johnson, MD",
+                "specialty": "Anesthesiology",
+                "phone": "(555) 123-4567",
+                "email": "sjohnson@medicenter.com",
+                "hospital": "Central Medical Center"
+            },
+            "Atorvastatin": {
+                "name": "Dr. Michael Chen, MD",
+                "specialty": "Cardiology", 
+                "phone": "(555) 234-5678",
+                "email": "mchen@heartcenter.com",
+                "hospital": "Heart & Vascular Institute"
+            },
+            "Amoxicillin": {
+                "name": "Dr. Lisa Rodriguez, MD",
+                "specialty": "Internal Medicine",
+                "phone": "(555) 345-6789", 
+                "email": "lrodriguez@primarycare.com",
+                "hospital": "Primary Care Associates"
+            }
+        }
         
-        drug_lower = drug_name.lower()
-        
-        # Common alternatives for specific drug classes
-        if any(term in drug_lower for term in ['acetaminophen', 'tylenol', 'paracetamol']):
-            alternatives = [
-                "Consider NSAIDs like ibuprofen for pain relief",
-                "Consult with prescriber about alternative analgesics",
-                "Generic acetaminophen from different manufacturers"
-            ]
-        elif any(term in drug_lower for term in ['ibuprofen', 'advil', 'motrin']):
-            alternatives = [
-                "Naproxen (Aleve) for anti-inflammatory effects",
-                "Acetaminophen for pain relief (different mechanism)",
-                "Consult prescriber about other NSAIDs"
-            ]
-        elif any(term in drug_lower for term in ['amoxicillin', 'penicillin']):
-            alternatives = [
-                "Cephalexin (if not penicillin allergic)",
-                "Azithromycin for penicillin-allergic patients",
-                "Consult prescriber for appropriate alternative antibiotic"
-            ]
-        elif any(term in drug_lower for term in ['lisinopril', 'ace inhibitor']):
-            alternatives = [
-                "Consider ARBs (losartan, valsartan)",
-                "Other ACE inhibitors (enalapril, ramipril)",
-                "Consult prescriber about therapeutic alternatives"
-            ]
-        else:
-            # Generic alternatives
-            alternatives = [
-                "Contact prescriber to discuss therapeutic alternatives",
-                "Check for generic versions from different manufacturers",
-                "Consider similar medications in the same therapeutic class",
-                "Consult clinical pharmacist for alternative recommendations"
-            ]
-        
-        return alternatives[:4]  # Limit to 4 alternatives
-
-    def _get_fallback_recommendations(self, drug_name: str, alert_level: str) -> Dict[str, Any]:
-        """Fallback recommendations when AI generation fails"""
+        # Try to find specific doctor for this drug, otherwise return default
+        return mock_doctors.get(drug_name, self._get_default_doctor_info())
+    
+    def _get_default_doctor_info(self) -> Dict[str, str]:
+        """
+        Default doctor information when specific prescriber is not found.
+        """
         return {
-            'drug_name': drug_name,
-            'alert_level': alert_level,
-            'risk_assessment': f"Unable to generate detailed risk assessment for {drug_name}. Manual review required.",
-            'immediate_actions': [
-                "Review drug status manually with pharmacy supervisor",
-                "Check FDA databases for latest information",
-                "Consult clinical pharmacist for guidance",
-                "Document review and decisions made"
-            ],
-            'alternatives': [
-                "Consult prescriber about alternative medications",
-                "Contact clinical pharmacist for therapeutic alternatives"
-            ],
-            'timeline': "Within 24 hours - manual review required",
-            'priority_score': 5
+            "name": "Dr. Robert Smith, MD",
+            "specialty": "General Practice",
+            "phone": "(555) 456-7890",
+            "email": "rsmith@generalpractice.com", 
+            "hospital": "General Medical Group"
         }

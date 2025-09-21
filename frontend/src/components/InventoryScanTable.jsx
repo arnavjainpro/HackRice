@@ -39,6 +39,10 @@ const InventoryScanTable = () => {
   const [aiRecommendations, setAiRecommendations] = useState(null)
   const [loadingAI, setLoadingAI] = useState(false)
   
+  // Communication Modal
+  const [showCommunicationModal, setShowCommunicationModal] = useState(false)
+  const [emailDraft, setEmailDraft] = useState('')
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(25)
@@ -266,7 +270,8 @@ const InventoryScanTable = () => {
         d2: null,
         alt3: null,
         d3: null,
-        email: 'Please contact support for assistance.'
+        doctor_info: {},
+        email_draft: 'Please contact support for assistance.'
       })
     } finally {
       setLoadingAI(false)
@@ -601,9 +606,45 @@ const InventoryScanTable = () => {
           )}
         </div>
 
-        {/* Filters */}
+        {/* Search and Filters */}
         {scanData && (
           <>
+            {/* Search bar */}
+            <div 
+              className="inventory-scan-search"
+              style={{
+                position: 'relative',
+                maxWidth: '400px',
+                marginBottom: '1rem'
+              }}
+            >
+              <Search style={{
+                position: 'absolute',
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '1rem',
+                height: '1rem',
+                color: '#6b7280'
+              }} />
+              <input
+                type="text"
+                placeholder="Search medications..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem 0.75rem 2.5rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease'
+                }}
+              />
+            </div>
+
+            {/* Filter buttons */}
             <div 
               className="inventory-scan-filters"
               style={{
@@ -614,7 +655,6 @@ const InventoryScanTable = () => {
                 marginBottom: '1rem'
               }}
             >
-              {/* Filter buttons */}
               <div style={{
                 display: 'flex',
                 backgroundColor: '#f9fafb',
@@ -648,40 +688,6 @@ const InventoryScanTable = () => {
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Search bar */}
-            <div 
-              className="inventory-scan-search"
-              style={{
-                position: 'relative',
-                maxWidth: '400px'
-              }}
-            >
-              <Search style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '1rem',
-                height: '1rem',
-                color: '#6b7280'
-              }} />
-              <input
-                type="text"
-                placeholder="Search medications..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem 0.75rem 2.5rem',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  transition: 'border-color 0.2s ease'
-                }}
-              />
             </div>
           </>
         )}
@@ -1292,9 +1298,10 @@ const InventoryScanTable = () => {
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 9999,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
-            padding: '1rem'
+            padding: '2rem 1rem',
+            overflowY: 'auto'
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -1312,7 +1319,8 @@ const InventoryScanTable = () => {
               width: '100%',
               maxHeight: '80vh',
               overflow: 'auto',
-              position: 'relative'
+              position: 'relative',
+              marginTop: '2rem'
             }}
           >
             {/* Modal Header */}
@@ -1488,10 +1496,11 @@ const InventoryScanTable = () => {
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.6)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center',
           zIndex: 1000,
-          padding: '1rem'
+          padding: '2rem 1rem',
+          overflowY: 'auto'
         }}>
           <div style={{
             backgroundColor: '#ffffff',
@@ -1502,7 +1511,8 @@ const InventoryScanTable = () => {
             maxHeight: '85vh',
             overflow: 'hidden',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            marginTop: '2rem'
           }}>
             {/* Modal Header */}
             <div style={{
@@ -1764,7 +1774,7 @@ const InventoryScanTable = () => {
                     </div>
 
                     {/* Contact Information */}
-                    {aiRecommendations.email && (
+                    {aiRecommendations.doctor_info && Object.keys(aiRecommendations.doctor_info).length > 0 && (
                       <div style={{
                         marginTop: '1.5rem',
                         backgroundColor: '#f8fafc',
@@ -1773,21 +1783,47 @@ const InventoryScanTable = () => {
                         padding: '1rem'
                       }}>
                         <h4 style={{
-                          margin: '0 0 0.5rem 0',
+                          margin: '0 0 0.75rem 0',
                           fontSize: '0.875rem',
                           fontWeight: '600',
                           color: '#334155'
                         }}>
-                          Contact Information:
+                          Prescribing Physician:
                         </h4>
-                        <p style={{
-                          margin: 0,
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem',
                           fontSize: '0.875rem',
                           color: '#475569',
                           lineHeight: 1.5
                         }}>
-                          {aiRecommendations.email}
-                        </p>
+                          {aiRecommendations.doctor_info.name && (
+                            <div>
+                              <strong>Name:</strong> {aiRecommendations.doctor_info.name}
+                            </div>
+                          )}
+                          {aiRecommendations.doctor_info.specialty && (
+                            <div>
+                              <strong>Specialty:</strong> {aiRecommendations.doctor_info.specialty}
+                            </div>
+                          )}
+                          {aiRecommendations.doctor_info.phone && (
+                            <div>
+                              <strong>Phone:</strong> {aiRecommendations.doctor_info.phone}
+                            </div>
+                          )}
+                          {aiRecommendations.doctor_info.email && (
+                            <div>
+                              <strong>Email:</strong> {aiRecommendations.doctor_info.email}
+                            </div>
+                          )}
+                          {aiRecommendations.doctor_info.hospital && (
+                            <div>
+                              <strong>Hospital/Practice:</strong> {aiRecommendations.doctor_info.hospital}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1847,8 +1883,12 @@ const InventoryScanTable = () => {
 
                 <button
                   onClick={() => {
-                    toast.success('Email communication feature coming soon!')
-                    // TODO: Implement email functionality
+                    if (aiRecommendations?.email_draft) {
+                      setEmailDraft(aiRecommendations.email_draft)
+                      setShowCommunicationModal(true)
+                    } else {
+                      toast.error('No communication draft available')
+                    }
                   }}
                   style={{
                     display: 'flex',
@@ -1872,6 +1912,239 @@ const InventoryScanTable = () => {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Communication Modal */}
+      {showCommunicationModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          zIndex: 1001,
+          padding: '2rem 1rem',
+          overflowY: 'auto'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            maxWidth: '700px',
+            width: '100%',
+            maxHeight: '85vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            marginTop: '2rem'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '2rem 2rem 1rem 2rem',
+              borderBottom: '1px solid #f1f5f9',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ flex: 1 }}>
+                <h1 style={{
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: '#1e293b',
+                  letterSpacing: '-0.025em'
+                }}>
+                  Generated Communication Draft
+                </h1>
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.875rem',
+                  color: '#64748b'
+                }}>
+                  Professional communication for {selectedDrug?.drug_name}
+                </p>
+                <button
+                  onClick={() => setShowCommunicationModal(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    right: '1.5rem',
+                    padding: '0.5rem',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#64748b',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f1f5f9'
+                    e.target.style.color = '#1e293b'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent'
+                    e.target.style.color = '#64748b'
+                  }}
+                >
+                  <X style={{ width: '1.25rem', height: '1.25rem' }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '1.5rem 2rem 2rem 2rem'
+            }}>
+              <div style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '1.5rem'
+              }}>
+                <h3 style={{
+                  margin: '0 0 1rem 0',
+                  fontSize: '1.125rem',
+                  fontWeight: '600',
+                  color: '#334155'
+                }}>
+                  Email Draft
+                </h3>
+                <textarea
+                  value={emailDraft}
+                  onChange={(e) => setEmailDraft(e.target.value)}
+                  style={{
+                    width: '100%',
+                    minHeight: '300px',
+                    padding: '1rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    lineHeight: '1.5',
+                    color: '#374151',
+                    backgroundColor: '#ffffff',
+                    resize: 'vertical',
+                    outline: 'none',
+                    fontFamily: 'inherit'
+                  }}
+                  placeholder="Email communication will appear here..."
+                />
+                
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  backgroundColor: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: '8px'
+                }}>
+                  <p style={{
+                    margin: 0,
+                    fontSize: '0.8125rem',
+                    color: '#1d4ed8',
+                    lineHeight: 1.4
+                  }}>
+                    <strong>Note:</strong> This is a draft communication. Please review and customize before sending to the prescribing physician. Make sure to include appropriate contact information and pharmacy details.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: '1.5rem 2rem',
+              borderTop: '1px solid #f1f5f9',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '1rem'
+            }}>
+              <button
+                onClick={() => setShowCommunicationModal(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#f8fafc',
+                  color: '#64748b',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#f1f5f9'
+                  e.target.style.borderColor = '#cbd5e1'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#f8fafc'
+                  e.target.style.borderColor = '#e2e8f0'
+                }}
+              >
+                Close
+              </button>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(emailDraft)
+                    toast.success('Communication copied to clipboard!')
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#059669',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#047857'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#059669'}
+                >
+                  <MessageSquare style={{ width: '1rem', height: '1rem' }} />
+                  Copy to Clipboard
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const mailtoLink = `mailto:${aiRecommendations?.doctor_info?.email || ''}?subject=Drug Shortage Alert - ${selectedDrug?.drug_name}&body=${encodeURIComponent(emailDraft)}`
+                    window.location.href = mailtoLink
+                    toast.success('Opening email client...')
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#b91c1c'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#dc2626'}
+                >
+                  <Mail style={{ width: '1rem', height: '1rem' }} />
+                  Send Email
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

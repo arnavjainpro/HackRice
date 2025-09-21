@@ -98,12 +98,6 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           {!isMobile && (
             <div className="navbar-actions">
-              {/* System Status */}
-              <div className="system-status">
-                <Activity className="status-icon" />
-                <span>System Online</span>
-              </div>
-
               {/* Notifications */}
               <button className="notification-btn">
                 <Bell className="bell-icon" />
@@ -219,11 +213,6 @@ const Navbar = () => {
             </div>
 
             <div className="mobile-menu-content">
-              <div className="system-status mobile">
-                <Activity className="status-icon" />
-                <span>System Online</span>
-              </div>
-
               <button className="mobile-menu-item" onClick={() => handleNavigation('/dashboard')}>
                 <Activity className="menu-item-icon" />
                 Dashboard

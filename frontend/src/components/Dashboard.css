@@ -10,10 +10,14 @@
   max-width: 1400px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 2rem;
   padding: 0 1rem;
+}
+
+.dashboard-title {
+  text-align: center;
 }
 
 .dashboard-title h1 {
