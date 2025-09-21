@@ -461,9 +461,10 @@ const ComplianceCenter = () => {
                     padding: '1.5rem',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
-                    height: '200px',
+                    minHeight: '200px',
                     display: 'flex',
-                    flexDirection: 'column'
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
                   }}>
                     <div style={{
                       display: 'flex',
@@ -490,17 +491,13 @@ const ComplianceCenter = () => {
                       </span>
                     </div>
                     
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                       <h4 style={{
                         margin: '0 0 0.5rem 0',
                         fontSize: '1rem',
                         fontWeight: '600',
                         color: '#111827',
-                        height: '48px',
-                        overflow: 'hidden',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical'
+                        lineHeight: 1.3
                       }}>
                         {report.title}
                       </h4>
@@ -510,11 +507,7 @@ const ComplianceCenter = () => {
                         fontSize: '0.875rem',
                         color: '#6b7280',
                         lineHeight: 1.4,
-                        flex: 1,
-                        overflow: 'hidden',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical'
+                        flex: 1
                       }}>
                         {report.description}
                       </p>
@@ -524,8 +517,9 @@ const ComplianceCenter = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      height: '40px',
-                      marginTop: 'auto'
+                      paddingTop: '0.5rem',
+                      borderTop: '1px solid #f3f4f6',
+                      marginTop: '0.5rem'
                     }}>
                       <span style={{
                         fontSize: '0.75rem',
@@ -540,7 +534,8 @@ const ComplianceCenter = () => {
                         loading={loading}
                         style={{ 
                           height: '32px',
-                          minWidth: '100px'
+                          minWidth: '100px',
+                          flexShrink: 0
                         }}
                       >
                         <Download style={{ width: '1rem', height: '1rem' }} />
