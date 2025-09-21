@@ -29,3 +29,6 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+backend/api/__pycache__/recall.cpython-311.pyc
+backend/api/__pycache__/supabase_retriever.cpython-311.pyc
+backend/api/__pycache__/webscraper.cpython-311.pyc
