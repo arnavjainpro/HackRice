@@ -165,7 +165,8 @@ const InventoryScanTable = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          drug_name: drugItem.drug_name
+          drug_name: drugItem.drug_name,
+          flag: drugItem.flag
         })
       })
 
