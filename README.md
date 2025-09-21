@@ -73,13 +73,37 @@ We focused on real-world practicality: real data, zero PHI, and strict prompt en
 
 ---
 
-## 📸 Demo Screenshots
-*(Add screenshots or a demo video link here if available.)*  
-
----
-
 ## ⚙️ Tech Stack
 - **Frontend:** React, Vite, Tailwind CSS, Vercel  
 - **Backend:** FastAPI, Railway  
 - **Database:** PostgreSQL, Supabase  
 - **AI & Data:** Gemini API, BeautifulSoup, Pandas, Rapidfuzz
+
+---
+
+## 📦 Prerequisites
+
+Make sure you have the following installed:
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [Python](https://www.python.org/downloads/) (3.10+ recommended)
+- [pip](https://pip.pypa.io/en/stable/)
+- [virtualenv](https://virtualenv.pypa.io/en/latest/) (optional but recommended)
+- [Git](https://git-scm.com/)
+
+---
+
+## ⚡️ Installation
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-username/your-project.git
+cd your-project
+cd backend 
+uvicorn main:app --reload
+cd ..
+cd frontend
+cd npm run dev
+```
+---
+
+Thank You for Viewing our Repo!!
