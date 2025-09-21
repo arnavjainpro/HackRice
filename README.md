@@ -106,4 +106,4 @@ cd npm run dev
 ```
 ---
 
-Thank You for Viewing our Repo!!
+## Thank You for Viewing our Repo!!
